@@ -28,8 +28,8 @@ export function SourcesPanel() {
         {error && <div className="down">{error}</div>}
         {data && latest.size === 0 && (
           <div className="muted">
-            Nothing ingested yet. Run <code>make ingest</code> (Zillow + FRED) or{" "}
-            <code>make demo-data</code>.
+            Nothing ingested yet. Run <code>make ingest</code> (Zillow, FRED, Census, and HUD
+            when <code>MOGUL_HUD_API_TOKEN</code> is set).
           </div>
         )}
         {[...latest.values()].map((r) => (

@@ -124,7 +124,7 @@ export function ResultsTable({
                   </td>
                   <td style={{ textAlign: "left" }}>
                     <div style={{ color: "var(--text)", fontWeight: 600, fontFamily: "var(--font-sans)" }}>
-                      {l.address} {l.source === "demo" && <span className="badge flat">DEMO</span>}
+                      {l.address}
                     </div>
                     <div className="muted" style={{ fontSize: 11 }}>
                       {l.city}, {l.state} · {l.beds ?? "?"}bd/{l.baths ?? "?"}ba

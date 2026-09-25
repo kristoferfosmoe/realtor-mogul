@@ -17,8 +17,7 @@ export function MarketQuote({ market }: { market: MarketSummary }) {
             {marketSymbol(market.geography.name)}{" "}
             <span className="muted" style={{ fontWeight: 500, fontSize: 14 }}>
               {market.geography.name}
-            </span>{" "}
-            {market.demo && <span className="badge flat">DEMO</span>}
+            </span>
           </div>
           <div className="quote-addr">
             {market.geography.kind === "country" ? "National" : `Metro #${market.geography.size_rank ?? "—"}`}

@@ -1,0 +1,12 @@
+{
+  "rent": 1450,
+  "rentRangeLow": 1300,
+  "rentRangeHigh": 1600,
+  "latitude": 35.12,
+  "longitude": -89.9,
+  "comparables": [
+    {"id": "1", "formattedAddress": "4401 Walnut Grove Rd, Memphis, TN 38117", "propertyType": "Single Family", "bedrooms": 3, "bathrooms": 2, "squareFootage": 1500, "price": 1475, "listingType": "Standard", "distance": 0.12, "daysOld": 14, "correlation": 0.98},
+    {"id": "2", "formattedAddress": "210 Oak Ct, Memphis, TN 38117", "propertyType": "Single Family", "bedrooms": 3, "bathrooms": 1.5, "squareFootage": 1320, "price": 1395, "distance": 0.4, "daysOld": 40, "correlation": 0.95},
+    {"id": "3", "formattedAddress": "no price", "bedrooms": 3}
+  ]
+}

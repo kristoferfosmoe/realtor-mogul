@@ -1,0 +1,9 @@
+{
+  "data": {
+    "year": "2025",
+    "metroareas": [
+      {"metro_name": "Memphis, TN-MS-AR HUD Metro FMR Area", "code": "METRO32820M32820", "Efficiency": 975, "One-Bedroom": 1036, "Two-Bedroom": 1185, "Three-Bedroom": 1537, "Four-Bedroom": 1680, "FMR Percentile": 40, "statename": "Tennessee", "statecode": "TN", "smallarea_status": "0"}
+    ],
+    "counties": []
+  }
+}

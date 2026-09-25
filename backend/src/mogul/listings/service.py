@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Iterable
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 
 from pydantic import BaseModel
@@ -11,14 +12,14 @@ from sqlalchemy.orm import Session, selectinload
 
 from mogul.db.models import BuyBox, Geography, Listing
 from mogul.markets.analytics import SeriesStats, stats
-from mogul.markets.queries import best_series, observations
+from mogul.markets.queries import best_series, latest_values, observations
 from mogul.portfolio.service import evaluate as evaluate_portfolio
 from mogul.portfolio.service import load_properties
 
 from .buybox import Assumptions, Criteria
-from .rent import RentEstimate, estimate_rent
+from .rent import CompsEstimate, RentEstimate, ZipFactor, estimate_rent
 from .scoring import Evaluation, ListingFacts, evaluate, filter_reasons
-from .store import DEMO, days_listed
+from .store import days_listed
 
 FALLBACK_RATE = 0.07
 
@@ -35,9 +36,19 @@ class Context:
     markets: dict[int | None, MarketContext]  # None = national
     mortgage_rate: float | None
     shares: dict[int | None, float]  # share of held portfolio value by market
+    # HUD fair market rents: metro id -> {"0br".."4br": rent}, with the metro's label.
+    fmr: dict[int, tuple[str, dict[str, float]]] = field(default_factory=dict)
+    # Census ACS median gross rent: by metro id (None = US), and by ZIP.
+    acs: dict[int | None, float] = field(default_factory=dict)
+    zip_rents: dict[str, float] = field(default_factory=dict)
 
 
-def load_context(session: Session) -> Context:
+def _label(geo: Geography) -> str:
+    return "US" if geo.kind == "country" else geo.name.split(",")[0].split("-")[0]
+
+
+def load_context(session: Session, zips: Iterable[str] = ()) -> Context:
+    """Market data for screening. `zips` limits the ZIP-level data loaded."""
     chosen = best_series(session, ["rent_index", "home_value", "mortgage_rate_30y"])
     obs = observations(session, [s.id for s in chosen.values()])
     geos = {s.geography_id: s.geography for s in chosen.values()}
@@ -47,7 +58,7 @@ def load_context(session: Session) -> Context:
         rent = chosen.get((gid, "rent_index"))
         value = chosen.get((gid, "home_value"))
         ctx = MarketContext(
-            label="US" if geo.kind == "country" else geo.name.split(",")[0].split("-")[0],
+            label=_label(geo),
             rent=stats(obs.get(rent.id, [])) if rent else None,
             value=stats(obs.get(value.id, [])) if value else None,
         )
@@ -65,7 +76,27 @@ def load_context(session: Session) -> Context:
     total = sum(v for _, v in held)
     for mid, v in held:
         shares[mid] = shares.get(mid, 0.0) + v / total
-    return Context(markets=markets, mortgage_rate=rate, shares=shares)
+
+    fmr: dict[int, tuple[str, dict[str, float]]] = {}
+    for x in latest_values(session, "fair_market_rent", kind="msa"):
+        fmr.setdefault(x.geography.id, (_label(x.geography), {}))[1][x.segment] = x.value
+    acs: dict[int | None, float] = {}
+    for x in latest_values(session, "median_gross_rent", kind="msa"):
+        acs.setdefault(x.geography.id, x.value)
+    for x in latest_values(session, "median_gross_rent", kind="country"):
+        acs.setdefault(None, x.value)
+    wanted = {z[:5] for z in zips if z}
+    zip_rents = (
+        {
+            x.geography.name: x.value
+            for x in latest_values(session, "median_gross_rent", kind="zip", names=wanted)
+        }
+        if wanted
+        else {}
+    )
+    return Context(
+        markets=markets, mortgage_rate=rate, shares=shares, fmr=fmr, acs=acs, zip_rents=zip_rents
+    )
 
 
 def interest_rate(a: Assumptions, ctx: Context) -> float:
@@ -75,15 +106,14 @@ def interest_rate(a: Assumptions, ctx: Context) -> float:
 
 
 def active_listings(session: Session) -> list[Listing]:
-    """Active listings, one per property: real sources beat demo, then the freshest."""
+    """Active listings, one per property: the most recently seen source wins."""
     rows = session.scalars(
         select(Listing).options(selectinload(Listing.events)).where(Listing.status == "active")
     )
     best: dict[str, Listing] = {}
     for row in rows:
         cur = best.get(row.address_key)
-        rank = (row.source != DEMO, _utc(row.last_seen))
-        if cur is None or rank > (cur.source != DEMO, _utc(cur.last_seen)):
+        if cur is None or _utc(row.last_seen) > _utc(cur.last_seen):
             best[row.address_key] = row
     return list(best.values())
 
@@ -108,14 +138,29 @@ def facts(listing: Listing, ctx: Context, today: date) -> ListingFacts:
 
 
 def rent_for(listing: Listing, ctx: Context) -> RentEstimate | None:
-    market = ctx.markets.get(listing.market_id) if listing.market_id else None
+    """See mogul.listings.rent for the order sources are tried in."""
+    mid = listing.market_id
+    market = ctx.markets.get(mid) if mid else None
     national = ctx.markets.get(None)
-    source = market if market and market.rent else national
+    typical: float | None = None
+    fmr: dict[str, float] | None = None
+    label, reference = "US", ctx.acs.get(None)
+    if market and market.rent:
+        typical, label, reference = market.rent.latest, market.label, ctx.acs.get(mid)
+    elif mid and mid in ctx.fmr:
+        (label, fmr), reference = ctx.fmr[mid], ctx.acs.get(mid)
+    elif national and national.rent:
+        typical, label = national.rent.latest, national.label
+    zip5 = (listing.zip or "")[:5]
+    zip_rent = ctx.zip_rents.get(zip5)
     return estimate_rent(
         override=listing.rent_override,
         stated=listing.stated_rent,
-        typical_rent=source.rent.latest if source and source.rent else None,
-        market_label=source.label if source else "US",
+        comps=CompsEstimate.model_validate(listing.rent_comps) if listing.rent_comps else None,
+        typical_rent=typical,
+        fmr=fmr,
+        zip_factor=ZipFactor(zip5, zip_rent / reference) if zip_rent and reference else None,
+        market_label=label,
         units=listing.units,
         beds=listing.beds,
         sqft=listing.sqft,
@@ -154,7 +199,6 @@ class Summary(BaseModel):
     watch: int
     new_matches: int
     interest_rate: float
-    demo: bool
 
 
 @dataclass
@@ -169,9 +213,9 @@ def recommend(
     session: Session, box: BuyBox, today: date | None = None
 ) -> tuple[Summary, list[Row]]:
     today = today or date.today()
-    ctx = load_context(session)
-    criteria = Criteria.model_validate(box.criteria)
     listings = active_listings(session)
+    ctx = load_context(session, zips=[x.zip for x in listings if x.zip])
+    criteria = Criteria.model_validate(box.criteria)
     seen_at = _utc(box.last_viewed_at) if box.last_viewed_at else None
     rows: list[Row] = []
     filtered = 0
@@ -196,7 +240,6 @@ def recommend(
         watch=signals.count("WATCH"),
         new_matches=sum(r.is_new and r.evaluation.signal in ("BUY", "STRONG BUY") for r in rows),
         interest_rate=interest_rate(Assumptions.model_validate(box.assumptions), ctx),
-        demo=any(r.listing.source == DEMO for r in rows),
     )
     return summary, rows
 

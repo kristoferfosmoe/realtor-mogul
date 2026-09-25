@@ -9,9 +9,8 @@ from sqlalchemy.orm import Session
 from mogul.db.models import Geography, IngestionRun, MarketSeries
 from mogul.db.session import get_session
 from mogul.ingest import ATTRIBUTIONS
-from mogul.ingest.pipeline import DEMO_SOURCE
 from mogul.markets.analytics import SeriesStats, gross_yield, shift_months, stats
-from mogul.markets.queries import best_series, observations
+from mogul.markets.queries import best_series, latest_values, observations
 
 router = APIRouter(prefix="/markets", tags=["markets"])
 DbSession = Annotated[Session, Depends(get_session)]
@@ -25,6 +24,7 @@ INDICATORS = [
     ("rental_vacancy", "Rental Vacancy"),
 ]
 SPARK_MONTHS = 24
+BENCHMARKS = ("fair_market_rent", "median_gross_rent")
 
 
 class Point(BaseModel):
@@ -47,7 +47,6 @@ class MarketSummary(BaseModel):
     gross_yield: float | None
     rent_spark: list[float]
     sources: list[str]
-    demo: bool
 
 
 class SeriesOut(BaseModel):
@@ -60,9 +59,20 @@ class SeriesOut(BaseModel):
     points: list[Point]
 
 
+class Benchmark(BaseModel):
+    """A published rent level: HUD fair market rent by bedroom, or Census median."""
+
+    metric: str  # fair_market_rent | median_gross_rent
+    segment: str  # 0br..4br for fair_market_rent, else "all"
+    source: str
+    date: date
+    value: float
+
+
 class MarketDetail(BaseModel):
     summary: MarketSummary
     series: list[SeriesOut]
+    benchmarks: list[Benchmark]
 
 
 class Indicator(BaseModel):
@@ -71,7 +81,6 @@ class Indicator(BaseModel):
     unit: str
     frequency: str
     source: str
-    demo: bool
     stats: SeriesStats | None
     spark: list[Point]
 
@@ -117,7 +126,6 @@ def _summary(
         gross_yield=gross_yield(rent_obs, value_obs),
         rent_spark=[v for _, v in rent_obs[-SPARK_MONTHS:]],
         sources=sources,
-        demo=DEMO_SOURCE in sources,
     )
 
 
@@ -157,7 +165,6 @@ def indicators(db: DbSession) -> list[Indicator]:
                 unit=s.unit,
                 frequency=s.frequency,
                 source=s.source,
-                demo=s.source == DEMO_SOURCE,
                 stats=stats(points),
                 spark=[Point(date=d, value=v) for d, v in points if cutoff and d >= cutoff],
             )
@@ -199,6 +206,10 @@ def market_detail(geography_id: int, db: DbSession) -> MarketDetail:
     chosen = best_series(db, LOCAL_METRICS, [geo.id])
     obs = observations(db, [s.id for s in chosen.values()])
     rent, value = chosen.get((geo.id, "rent_index")), chosen.get((geo.id, "home_value"))
+    benchmarks = [
+        Benchmark(metric=b.metric, segment=b.segment, source=b.source, date=b.date, value=b.value)
+        for b in latest_values(db, BENCHMARKS, kind=geo.kind, names=[geo.name])
+    ]
     return MarketDetail(
         summary=_summary(geo, rent, value, obs),
         series=[
@@ -214,4 +225,5 @@ def market_detail(geography_id: int, db: DbSession) -> MarketDetail:
             for s in (rent, value)
             if s is not None
         ],
+        benchmarks=sorted(benchmarks, key=lambda b: (b.metric, b.segment)),
     )

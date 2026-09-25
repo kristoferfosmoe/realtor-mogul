@@ -35,7 +35,15 @@ jobs:
         run: |
           uv run alembic upgrade head
           uv run alembic check
-          uv run python -m mogul.ingest demo
+          # Real-shaped fixture archives exercise the Postgres upserts.
+          mkdir -p /tmp/zillow /tmp/hud /tmp/census
+          cp tests/fixtures/zillow_metro_zori.csv /tmp/zillow/metro_zori.csv
+          cp tests/fixtures/hud_statedata_tn_2026.json /tmp/hud/2026_TN.json
+          cp tests/fixtures/acs_metro_2024.json /tmp/census/2024_metro.json
+          cp tests/fixtures/acs_zip_2024.json /tmp/census/2024_zip.json
+          uv run python -m mogul.ingest reparse zillow /tmp/zillow
+          uv run python -m mogul.ingest reparse hud /tmp/hud
+          uv run python -m mogul.ingest reparse census /tmp/census
           uv run alembic downgrade base
 
   web:

@@ -46,17 +46,18 @@ class SavedDeal(Base):
 
 
 class Geography(Base):
-    """A place market data describes: the country, a metro (MSA), and later ZIPs etc.
+    """A place market data describes: the country, a metro (MSA) or a ZIP (ZCTA).
 
-    `name` follows Zillow's style ("Austin, TX"). Matching the same metro across
-    sources (Zillow ids, CBSA codes) goes through `external_ids`.
+    A metro's `name` follows Zillow's style ("Austin, TX"), and HUD and Census metro
+    titles are shortened to it. A ZIP's name is its five digits. Per-source ids (Zillow
+    RegionID, CBSA code, HUD FMR area code) are kept in `external_ids`.
     """
 
     __tablename__ = "geography"
     __table_args__ = (UniqueConstraint("kind", "name"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    kind: Mapped[str] = mapped_column(String(20))  # country | msa
+    kind: Mapped[str] = mapped_column(String(20))  # country | msa | zip
     name: Mapped[str] = mapped_column(String(200))
     state: Mapped[str | None] = mapped_column(String(2))
     size_rank: Mapped[int | None] = mapped_column(Integer)
@@ -81,7 +82,7 @@ class MarketSeries(Base):
     metric: Mapped[str] = mapped_column(String(40))  # see mogul.ingest.base.METRICS
     segment: Mapped[str] = mapped_column(String(40), default="all")
     unit: Mapped[str] = mapped_column(String(20))  # usd | rate | index
-    frequency: Mapped[str] = mapped_column(String(20))  # weekly | monthly | quarterly
+    frequency: Mapped[str] = mapped_column(String(20))  # weekly | monthly | quarterly | annual
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
@@ -239,7 +240,7 @@ class Valuation(Base):
 
 
 class Listing(Base):
-    """A property for sale, from an API, a CSV export, or demo data.
+    """A property for sale, from an API or a CSV export.
 
     (source, source_id) identifies it within a source; `address_key` is a normalized
     address used to spot the same property coming from different sources.
@@ -280,6 +281,8 @@ class Listing(Base):
     url: Mapped[str | None] = mapped_column(String(500))
     stated_rent: Mapped[float | None] = mapped_column(Float)  # monthly, if the listing says
     rent_override: Mapped[float | None] = mapped_column(Float)  # monthly, set by the user
+    # RentCast rent AVM and its comps (a mogul.listings.rent.CompsEstimate), on request.
+    rent_comps: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 

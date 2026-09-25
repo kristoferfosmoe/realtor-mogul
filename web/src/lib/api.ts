@@ -24,6 +24,7 @@ export type MarketSeries = Schemas["SeriesOut"];
 export type Indicator = Schemas["Indicator"];
 export type Sources = Schemas["SourcesOut"];
 export type Point = Schemas["Point"];
+export type Benchmark = Schemas["Benchmark"];
 
 export type Portfolio = Schemas["PortfolioOut"];
 export type Holding = Schemas["Holding"];
@@ -54,6 +55,7 @@ export type ListingOut = Schemas["ListingOut"];
 export type ListingDetail = Schemas["ListingDetail"];
 export type Evaluation = Schemas["Evaluation"];
 export type RentEstimate = Schemas["RentEstimate"];
+export type CompsEstimate = Schemas["CompsEstimate"];
 export type ListingSources = Schemas["SourceStatus"];
 
 export class ApiError extends Error {}
@@ -179,6 +181,8 @@ export const api = {
     request<ListingDetail>(`/listings/${id}?buy_box_id=${buyBoxId}`),
   patchListing: (id: number, body: { rent_override?: number | null; units?: number }) =>
     request<ListingOut>(`/listings/${id}`, { method: "PATCH", body: json(body) }),
+  listingRentComps: (id: number, buyBoxId: number) =>
+    request<ListingDetail>(`/listings/${id}/rent-comps?buy_box_id=${buyBoxId}`, { method: "POST" }),
   listingToWatchlist: (id: number, buyBoxId: number) =>
     request<{ deal_id: number }>(`/listings/${id}/watchlist?buy_box_id=${buyBoxId}`, {
       method: "POST",

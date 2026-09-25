@@ -8,7 +8,7 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 import httpx
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from mogul.db.models import Geography, IngestionRun, Listing, ListingEvent
@@ -16,8 +16,6 @@ from mogul.ingest.pipeline import archive
 
 from .normalize import address_key, match_market
 from .sources import ListingSource, ParsedListing
-
-DEMO = "demo"
 
 
 @dataclass
@@ -91,8 +89,7 @@ def run_listing_source(
 ) -> IngestionRun:
     """Like the market pipeline: archive raw files, store, log. For listing runs the
     run's series_count is listings seen and observation_count is price changes."""
-    label = "demo-listings" if source.name == DEMO else source.name  # vs demo market data
-    run = IngestionRun(source=label, status="running", started_at=datetime.now(UTC))
+    run = IngestionRun(source=source.name, status="running", started_at=datetime.now(UTC))
     session.add(run)
     session.commit()
     run_id = run.id
@@ -101,8 +98,6 @@ def run_listing_source(
         if files:
             run.raw_path = str(archive(raw_dir, source.name, run.started_at, files))
         result = store_listings(session, source.name, source.parse(files), source.full_sweep)
-        if source.name != DEMO:
-            session.execute(delete(Listing).where(Listing.source == DEMO))
         run.series_count = result.new + result.updated
         run.observation_count = result.price_changes
         run.status = "ok"

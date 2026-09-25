@@ -11,6 +11,7 @@ import { MacroPanel } from "./MacroPanel";
 import { MarketChart } from "./MarketChart";
 import { MarketList } from "./MarketList";
 import { MarketQuote } from "./MarketQuote";
+import { RentBenchmarks } from "./RentBenchmarks";
 import { SourcesPanel } from "./SourcesPanel";
 
 export function MarketsView() {
@@ -42,26 +43,20 @@ export function MarketsView() {
 
   const current = detail?.id === selectedId ? detail.data : null;
   const series = (metric: string) => current?.series.find((s) => s.metric === metric)?.points ?? [];
-  const anyDemo = markets.some((m) => m.demo) || indicators.some((i) => i.demo);
 
   if (error) return <div className="empty down">{error}</div>;
   if (!loaded) return <div className="empty">LOADING…</div>;
 
   return (
     <>
-      {anyDemo && (
-        <div className="banner">
-          <b>DEMO DATA</b> — synthetic numbers for trying the app, not real markets. Run{" "}
-          <code>make ingest</code> to load Zillow and FRED data; it replaces the demo set.
-        </div>
-      )}
       {markets.length === 0 ? (
         <main className="page">
           <section className="panel empty">
             <p>No market data yet.</p>
             <p className="muted">
-              Run <code>make ingest</code> to pull rent and home-value history from Zillow and
-              national indicators from FRED, or <code>make demo-data</code> to try the page offline.
+              Run <code>make ingest</code> to pull rent and home-value history from Zillow, national
+              indicators from FRED, Census median rents and (with <code>MOGUL_HUD_API_TOKEN</code>{" "}
+              set) HUD fair market rents.
             </p>
           </section>
           <SourcesPanel />
@@ -80,6 +75,7 @@ export function MarketsView() {
               <>
                 <MarketQuote market={current.summary} />
                 <MarketChart rent={series("rent_index")} value={series("home_value")} />
+                <RentBenchmarks benchmarks={current.benchmarks} typical={current.summary.rent?.latest} />
                 <AnnualTable rent={series("rent_index")} value={series("home_value")} />
               </>
             ) : (

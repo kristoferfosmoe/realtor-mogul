@@ -127,3 +127,44 @@ def test_all_cash_buy_box_has_no_loan() -> None:
                   interest_rate=0.07, rent_stats=None, value_stats=None)  # fmt: skip
     assert ev.deal.financing is None and ev.metrics.dscr is None
     assert next(c for c in ev.checks if c.name == "DSCR").passed
+
+
+def test_comps_rank_below_stated_rent_and_above_the_model() -> None:
+    from datetime import UTC, datetime
+
+    from mogul.listings.rent import Comp, CompsEstimate
+
+    comps = CompsEstimate(
+        per_unit=1450,
+        low=1300,
+        high=1600,
+        units=2,
+        comps=[Comp(address="a", rent=1400), Comp(address="b", rent=1500)],
+        fetched_at=datetime(2026, 9, 1, tzinfo=UTC),
+    )
+    kw = dict(market_label="Memphis", units=2, beds=4, sqft=None, comps=comps)
+    assert estimate_rent(override=None, stated=2500, typical_rent=1000, **kw).source == "stated"
+    r = estimate_rent(override=None, stated=None, typical_rent=1000, **kw)
+    assert r is not None and (r.source, r.confidence, r.monthly) == ("comps", "medium", 2900)
+    assert r.basis == (
+        "RentCast AVM $1,450 (range $1,300–$1,600) from 2 comps, 2026-09-01 · 2 units"
+    )
+
+
+def test_hud_fair_market_rent_fallback() -> None:
+    from mogul.listings.rent import ZipFactor
+
+    fmr = {"0br": 900, "1br": 1000, "2br": 1200, "3br": 1500, "4br": 1700}
+    kw = dict(override=None, stated=None, typical_rent=None, market_label="Jackson", fmr=fmr)
+    three = estimate_rent(units=1, beds=3, sqft=None, **kw)
+    assert three is not None and three.monthly == 1500
+    assert three.basis == "Jackson HUD fair market rent 3BR $1,500"
+    # HUD's own rule: 5BR = 4BR + 15%. Duplex: per-unit FMR, no multifamily discount.
+    five = estimate_rent(units=1, beds=5, sqft=None, **kw)
+    assert five is not None and five.monthly == 1950  # 1700 × 1.15 = 1955
+    duplex = estimate_rent(units=2, beds=4, sqft=None, **kw)
+    assert duplex is not None and duplex.monthly == 2400 and "2 units" in duplex.basis
+    # The ZIP adjustment is clamped.
+    rich = estimate_rent(units=1, beds=2, sqft=None, zip_factor=ZipFactor("1", 3.0), **kw)
+    assert rich is not None and rich.monthly == 1620 and "ZIP 1 ×1.35" in rich.basis
+    assert estimate_rent(units=1, beds=2, sqft=None, **{**kw, "fmr": None}) is None

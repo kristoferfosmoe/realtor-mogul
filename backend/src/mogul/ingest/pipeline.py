@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.dialects import postgresql, sqlite
 from sqlalchemy.orm import Session
 
@@ -16,7 +16,6 @@ from mogul.db.models import Geography, IngestionRun, MarketObservation, MarketSe
 
 from .base import GeoRef, ParsedSeries, RawFile, Source
 
-DEMO_SOURCE = "demo"
 _CHUNK = 500
 
 
@@ -33,8 +32,6 @@ def run_source(
         if files:
             run.raw_path = str(archive(raw_dir, source.name, run.started_at, files))
         run.series_count, run.observation_count = store(session, source.name, source.parse(files))
-        if source.name != DEMO_SOURCE:
-            purge_source(session, DEMO_SOURCE)  # real data supersedes demo data
         run.status = "ok"
         run.finished_at = datetime.now(UTC)
         session.commit()
@@ -63,17 +60,19 @@ def load_archive(folder: Path) -> list[RawFile]:
 def store(session: Session, source: str, parsed: Iterable[ParsedSeries]) -> tuple[int, int]:
     """Upsert geographies, series and observations. Returns (series, observations)."""
     n_series = n_obs = 0
-    geo_cache: dict[tuple[str, str], Geography] = {}
+    # Loaded up front: the Census source alone brings ~33,000 ZIP series.
+    geo_cache = {(g.kind, g.name): g for g in session.scalars(select(Geography))}
+    series_cache = {
+        s.source_key: s
+        for s in session.scalars(select(MarketSeries).where(MarketSeries.source == source))
+    }
     for ps in parsed:
         geo = _upsert_geography(session, ps.geography, geo_cache)
-        series = session.scalar(
-            select(MarketSeries).where(
-                MarketSeries.source == source, MarketSeries.source_key == ps.source_key
-            )
-        )
+        series = series_cache.get(ps.source_key)
         if series is None:
             series = MarketSeries(source=source, source_key=ps.source_key)
             session.add(series)
+            series_cache[ps.source_key] = series
         series.geography = geo
         series.metric = ps.metric
         series.segment = ps.segment
@@ -87,21 +86,12 @@ def store(session: Session, source: str, parsed: Iterable[ParsedSeries]) -> tupl
     return n_series, n_obs
 
 
-def purge_source(session: Session, source: str) -> None:
-    session.execute(delete(MarketSeries).where(MarketSeries.source == source))
-    # Geographies left without any series (only demo ones) go too.
-    session.execute(
-        delete(Geography).where(~Geography.id.in_(select(MarketSeries.geography_id).distinct()))
-    )
-
-
 def _upsert_geography(
     session: Session, ref: GeoRef, cache: dict[tuple[str, str], Geography]
 ) -> Geography:
+    """`cache` holds every geography already in the database."""
     key = (ref.kind, ref.name)
-    geo = cache.get(key) or session.scalar(
-        select(Geography).where(Geography.kind == ref.kind, Geography.name == ref.name)
-    )
+    geo = cache.get(key)
     if geo is None:
         geo = Geography(kind=ref.kind, name=ref.name, external_ids={})
         session.add(geo)

@@ -24,7 +24,7 @@ export function MacroPanel({ indicators }: { indicators: Indicator[] }) {
               <li key={ind.metric} className="macro-row">
                 <div>
                   <div className="macro-label">
-                    {ind.label} {ind.demo && <span className="badge flat">DEMO</span>}
+                    {ind.label}
                   </div>
                   <div className="muted macro-note num" title={ind.stats ? `As of ${ind.stats.latest_date}` : undefined}>
                     {q.note}

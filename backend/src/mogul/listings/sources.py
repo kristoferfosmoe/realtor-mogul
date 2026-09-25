@@ -1,4 +1,4 @@
-"""Listing sources: RentCast API, CSV exports (Redfin or generic), and demo data."""
+"""Listing sources: RentCast API and CSV exports (Redfin or generic)."""
 
 from __future__ import annotations
 
@@ -6,10 +6,9 @@ import csv
 import hashlib
 import io
 import json
-import random
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import Any, Protocol
 
 import httpx
@@ -270,82 +269,3 @@ def _date(text: str | None) -> date | None:
         return datetime.fromisoformat(text.replace("Z", "+00:00")).date() if text else None
     except ValueError:
         return None
-
-
-# ---------------------------------------------------------------- demo
-
-_STREETS = ["Maple", "Oak", "Cedar", "Pine", "Elm", "Birch", "Walnut", "Chestnut", "Willow",
-            "Hickory", "Magnolia", "Sycamore", "Dogwood", "Poplar", "Aspen"]  # fmt: skip
-_SUFFIX = ["St", "Ave", "Dr", "Ln", "Ct", "Rd", "Pl"]
-
-
-class DemoListingSource:
-    """Synthetic listings for the demo metros. Labeled DEMO; replaced by real sources."""
-
-    name = "demo"
-    full_sweep = True
-
-    def __init__(self, today: date | None = None, seed: int = 11) -> None:
-        self.today = today or date.today()
-        self.seed = seed
-
-    def fetch(self, client: httpx.Client) -> list[RawFile]:
-        return []
-
-    def parse(self, files: Sequence[RawFile]) -> Iterable[ParsedListing]:
-        from mogul.ingest.demo import METROS
-
-        rng = random.Random(self.seed)
-        n = 0
-        for name, state, _rent0, value0, tilt in METROS:
-            city = name.split(",")[0]
-            typical = value0 * (1.62 + tilt * 10)  # roughly where the demo index ends up
-            for _ in range(rng.randint(4, 7)):
-                n += 1
-                kind = rng.choices(["single_family", "multi_2_4", "condo"], weights=[6, 2, 2])[0]
-                units = rng.choice([2, 2, 3, 4]) if kind == "multi_2_4" else 1
-                beds = (
-                    float(units * rng.choice([1, 2, 2, 3]))
-                    if units > 1
-                    else float(
-                        rng.choice([2, 3, 3, 3, 4, 4, 5])
-                        if kind != "condo"
-                        else rng.choice([1, 2, 2, 3])
-                    )
-                )
-                sqft = int((beds * 480 + rng.randint(-150, 350)) * (1 if kind != "condo" else 0.85))
-                size = (sqft / 1500) ** (0.8 if units > 1 else 0.6)
-                price = round(typical * rng.uniform(0.85, 1.35) * size / 1000) * 1000
-                dom = rng.choice([2, 5, 9, 14, 21, 35, 48, 60, 95])
-                listed = self.today - timedelta(days=dom)
-                history: list[tuple[date, str, float | None]] = [
-                    (listed, "listed", price * (1.05 if dom > 30 else 1.0))
-                ]
-                if dom > 30 and rng.random() < 0.7:
-                    history.append(
-                        (listed + timedelta(days=dom // 2), "price_change", float(price))
-                    )
-                yield ParsedListing(
-                    source_id=f"demo-{n}",
-                    address=f"{rng.randint(100, 9900)} {rng.choice(_STREETS)} "
-                    f"{rng.choice(_SUFFIX)}",
-                    city=city,
-                    state=state,
-                    zip=f"{rng.randint(10000, 99999)}",
-                    property_type=kind,
-                    units=units,
-                    beds=beds,
-                    baths=max(1.0, round(beds * 0.6 * 2) / 2),
-                    sqft=sqft,
-                    year_built=rng.randint(1925, 2021),
-                    hoa_monthly=float(rng.choice([180, 250, 320, 410]))
-                    if kind == "condo"
-                    else None,
-                    price=float(price),
-                    listed_date=listed,
-                    days_on_market=dom,
-                    stated_rent=float(round(units * rng.uniform(900, 1500), -1))
-                    if units > 1 and rng.random() < 0.6
-                    else None,
-                    history=tuple(history),
-                )

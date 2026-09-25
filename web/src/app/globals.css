@@ -744,13 +744,6 @@ table.grid tr.clickable {
 
 /* ---------- markets ---------- */
 
-.banner {
-  padding: 6px 16px;
-  background: var(--accent-bg);
-  border-bottom: 1px solid rgba(240, 185, 11, 0.35);
-  color: var(--accent);
-  font-size: 12px;
-}
 code {
   font-family: var(--font-mono);
   font-size: 0.95em;

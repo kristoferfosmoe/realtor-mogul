@@ -91,36 +91,46 @@ notebooks all use it.
 
 ### Market data (built)
 Tables:
-- `geography`: the country and metros (MSAs). The name follows Zillow's style
-  ("Austin, TX"), and `external_ids` holds per-source ids (Zillow RegionID today, CBSA later)
-  so one place can be matched across sources.
+- `geography`: the country, metros (MSAs) and ZIPs (ZCTAs). A metro's name follows
+  Zillow's style ("Austin, TX"). HUD and Census metro titles are shortened to it (first
+  principal city, first state: "Memphis, TN-MS-AR Metro Area" becomes "Memphis, TN"), so
+  their series land on the same place as Zillow's. `external_ids` keeps per-source ids
+  (Zillow RegionID, CBSA code, HUD FMR area code).
 - `market_series`: one series per `(source, source_key)`, e.g. Zillow's rent index for
-  Austin, tagged with `metric`, `unit` and `frequency`.
+  Austin, tagged with `metric`, `segment` (e.g. bedroom count), `unit` and `frequency`.
 - `market_observation(series_id, date, value)`: the history. Re-running an ingest
   updates values in place rather than adding duplicates, so revised numbers overwrite old ones.
 - `ingestion_run`: every attempt, with status, counts, the raw-archive path and any error.
 
 Metrics and units: `rent_index` (USD/mo, ZORI), `home_value` (USD, ZHVI),
-`mortgage_rate_30y` and `rental_vacancy` (decimal rates, like the engine), and `cpi_rent`
-(an index, shown as YoY).
+`mortgage_rate_30y` and `rental_vacancy` (decimal rates, like the engine), `cpi_rent`
+(an index, shown as YoY), `fair_market_rent` (USD/mo, HUD, segments `0br`–`4br`) and
+`median_gross_rent` (USD/mo, Census ACS).
 
 `mogul.markets.analytics` holds pure time-series math: YoY, 3/5-year compound annual
 growth (month-end aware), latest-on-or-before lookups for weekly and quarterly series,
-and gross yield (rent × 12 ÷ home value). When a place has several series for the same
-metric, a real source always wins over demo data.
+and gross yield (rent × 12 ÷ home value). Each metric comes from one source, so a place
+has at most one series per metric and segment.
+
+There is no demo or synthetic data. Every number on screen came from a source in the
+table below or from the user. Migration 0005 deletes demo data left by earlier versions.
 
 API: `GET /markets` (screener rows with stats and a 24-month sparkline),
-`GET /markets/{id}` (full history), `GET /markets/indicators` (national macro for the
+`GET /markets/{id}` (full history, plus the latest HUD and Census rents as
+`benchmarks`), `GET /markets/indicators` (national macro for the
 ticker tape), `GET /markets/sources` (run log and attributions).
 
 UI: the **Markets** page has a market-watch list (sort by size, rent YoY or yield), a
-quote header, a rent vs. home-value chart with 1Y–MAX ranges, a year-by-year table, a
+quote header, a rent vs. home-value chart with 1Y–MAX ranges, published rents (HUD fair
+market rents by bedroom and the Census median, each as a % of Zillow's typical rent), a
+year-by-year table, a
 US macro panel and data-source health. The analyzer can apply a market's 5-year compound
 growth rates to a deal (or start one with `/?market=<id>`) and use the current 30-year
 mortgage rate.
 
 ### Ingestion (built)
-`python -m mogul.ingest run {zillow|fred|all}` (or `make ingest`). Each source is an
+`python -m mogul.ingest run {zillow|fred|hud|census|all}` (or `make ingest`; `all` skips
+sources that are not configured and says why). Each source is an
 adapter with `fetch()` (download) and `parse()` (to `ParsedSeries`). The pipeline archives
 the raw files under `MOGUL_RAW_DATA_DIR/<source>/<timestamp>/` before parsing, upserts,
 and logs the run. A failed fetch is recorded on the run and leaves existing data untouched.
@@ -131,10 +141,17 @@ it daily.
 |---|---|---|
 | Zillow Research CSVs | ZORI rent, ZHVI home value; US + top `MOGUL_ZILLOW_MAX_METROS` metros | Free with attribution |
 | FRED CSV export (no key) | 30Y mortgage (PMMS), CPI rent of primary residence, rental vacancy | Public; attribution shown |
-| `demo` | Synthetic versions of the above | Offline only, labeled DEMO everywhere, deleted by any real run |
+| HUD USER FMR API | Fair market rents, studio–4BR, every metro FMR area; last `MOGUL_HUD_FMR_YEARS` fiscal years | Free token in `MOGUL_HUD_API_TOKEN`. One `statedata` call per state and year. A CBSA split into several FMR areas keeps its principal area |
+| Census ACS 5-year API | Median gross rent (B25064) for the US, metro areas and every ZIP (ZCTA); last `MOGUL_ACS_YEARS` vintages | Key optional (`MOGUL_CENSUS_API_KEY`). About 33,000 ZIP series. ZIPs only from the 2020 vintage on |
 
-Next sources: HUD Fair Market Rents (API token), Census ACS median rent by ZIP/tract,
-RentCast for comps. Listings and commercial sources are covered below.
+How to read them: FMRs are HUD's 40th-percentile *gross* rent (rent plus utilities) and
+set Section 8 payment standards. FY N takes effect October 1 of N-1, the date stored. ACS
+medians cover every renter, including long-time tenants, so they run below asking rents.
+They are used for a ZIP's position relative to its metro, not as a rent level. A vintage
+labeled Y covers Y-4 to Y and is dated December 31 of Y.
+
+Listings, rent comps and commercial sources are covered below. Next: tract-level ACS
+and a ZIP→CBSA crosswalk so suburbs match their metro.
 
 ### Portfolio (built)
 Tables (money is exact `NUMERIC(14,2)`; it records real transactions):
@@ -198,7 +215,6 @@ Sources (`mogul.listings.sources`), run by `python -m mogul.ingest listings …`
 |---|---|---|
 | RentCast `/v1/listings/sale` | `MOGUL_RENTCAST_API_KEY` + `MOGUL_LISTING_AREAS` | Full sweep per city: listings missing from a sweep are marked delisted |
 | CSV upload | Screener → Import | Redfin "Download All" exports are recognized; generic columns work too, including stated rent and units for multifamily and commercial |
-| `demo` | `make demo-data` | Synthetic, labeled DEMO, deleted by the first real fetch |
 
 Metro matching is by principal city in the metro's name ("Fort Lauderdale" matches
 "Miami-Fort Lauderdale-…, FL"). Suburbs fall back to national data until a ZIP→CBSA
@@ -207,10 +223,23 @@ crosswalk is added.
 **Rent estimate** (`rent.py`), in order of priority:
 1. The user's override (high confidence).
 2. Rent stated in the listing (medium).
-3. A model estimate (low): the metro's typical rent (ZORI), × a bedroom factor, × a
-   size factor clamped to 0.85–1.2, × 0.9 per unit for multifamily. It shows its basis.
+3. Comparable rentals (medium): RentCast's long-term rent AVM (`/v1/avm/rent/long-term`),
+   stored on the listing with its comps (`listing.rent_comps`). Each lookup is a paid
+   API call, so it runs only on request: the listing panel's "Get rent comps" button
+   (`POST /listings/{id}/rent-comps`), or `python -m mogul.ingest rents --limit N`
+   (`make rents`). That command picks active listings with no override, stated rent or
+   comps from the last 90 days that pass at least one buy box's hard filters, newest
+   first. A 2–4 unit building is looked up as one unit (beds, baths and size ÷ units)
+   and multiplied by the number of units.
+4. A model estimate (low). It starts from the first of these that exists:
+   - the metro's typical rent (ZORI), × a bedroom factor, × 0.9 per unit for multifamily;
+   - the metro's HUD fair market rent for that bedroom count (5BR = 4BR × 1.15, HUD's
+     rule), for metros Zillow does not cover;
+   - the national typical rent, as in the first case.
 
-Comps-based estimates (RentCast AVM or rental listings) are the planned upgrade.
+   Then it applies a size factor clamped to 0.85–1.2 and, when Census covers the ZIP, the
+   ZIP's median gross rent ÷ the metro's (or the nation's), clamped to 0.75–1.35. It
+   shows its basis, e.g. "Memphis typical rent $1,340 · 3BR ×1.20 · ZIP 38117 ×1.20".
 
 **Screening** (`scoring.py`, pure):
 1. **Hard filters:** status, markets, property types, price, beds, days on market, year built.
@@ -253,4 +282,5 @@ saves the listing as a watchlist deal using the buy box's assumptions).
 3. ✅ Market rent ingestion + Markets page (rent-trend charts, growth defaults).
 4. ✅ Portfolio tracking (ledger, CSV import, rent roll, valuations, actual vs. projected).
 5. ✅ Listings (RentCast, CSV), rent estimation, screener and recommendations, alerts.
+   HUD fair market rents, Census ZIP rents and RentCast rent comps.
 6. Commercial underwriting (rent roll, NNN, TI/LC), Monte Carlo, after-tax returns, auth.

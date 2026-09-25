@@ -53,7 +53,7 @@ export function DealTicket(props: Props) {
       rent_growth: g.rent_growth ?? deal.rent_growth,
       appreciation: g.appreciation ?? deal.appreciation,
     });
-    setGrowthFrom(`${shortName(m.geography.name)}${m.demo ? " (demo)" : ""}`);
+    setGrowthFrom(shortName(m.geography.name));
   };
   const set = <K extends keyof Deal>(key: K) => (v: Deal[K]) => onChange({ ...deal, [key]: v });
   const req = <K extends keyof Deal>(key: K) => (v: number | null) =>

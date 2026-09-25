@@ -1658,6 +1658,58 @@
         }
       }
     },
+    "/listings/{listing_id}/rent-comps": {
+      "post": {
+        "tags": [
+          "screener"
+        ],
+        "summary": "Listing Rent Comps",
+        "description": "Fetch comparable rentals from RentCast (one API call) and re-screen the listing.",
+        "operationId": "listing_rent_comps_listings__listing_id__rent_comps_post",
+        "parameters": [
+          {
+            "name": "listing_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Listing Id"
+            }
+          },
+          {
+            "name": "buy_box_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Buy Box Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListingDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/listings/{listing_id}/watchlist": {
       "post": {
         "tags": [
@@ -1958,6 +2010,41 @@
         "type": "object",
         "title": "Assumptions"
       },
+      "Benchmark": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "segment": {
+            "type": "string",
+            "title": "Segment"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "segment",
+          "source",
+          "date",
+          "value"
+        ],
+        "title": "Benchmark",
+        "description": "A published rent level: HUD fair market rent by bedroom, or Census median."
+      },
       "BulkDeleteIn": {
         "properties": {
           "ids": {
@@ -2093,6 +2180,147 @@
           "passed"
         ],
         "title": "Check"
+      },
+      "Comp": {
+        "properties": {
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "rent": {
+            "type": "number",
+            "title": "Rent"
+          },
+          "beds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Beds"
+          },
+          "baths": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baths"
+          },
+          "sqft": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sqft"
+          },
+          "distance_mi": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance Mi"
+          },
+          "days_old": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days Old"
+          },
+          "correlation": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correlation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "rent"
+        ],
+        "title": "Comp"
+      },
+      "CompsEstimate": {
+        "properties": {
+          "per_unit": {
+            "type": "number",
+            "title": "Per Unit"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "comps": {
+            "items": {
+              "$ref": "#/components/schemas/Comp"
+            },
+            "type": "array",
+            "title": "Comps"
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetched At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "per_unit",
+          "low",
+          "high",
+          "units",
+          "comps",
+          "fetched_at"
+        ],
+        "title": "CompsEstimate",
+        "description": "RentCast's rent AVM for one unit, and the comparable rentals behind it."
       },
       "Criteria": {
         "properties": {
@@ -2775,10 +3003,6 @@
             "type": "string",
             "title": "Source"
           },
-          "demo": {
-            "type": "boolean",
-            "title": "Demo"
-          },
           "stats": {
             "anyOf": [
               {
@@ -2804,7 +3028,6 @@
           "unit",
           "frequency",
           "source",
-          "demo",
           "stats",
           "spark"
         ],
@@ -3258,6 +3481,16 @@
             ],
             "title": "Rent Override"
           },
+          "rent_comps": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompsEstimate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "price_change": {
             "anyOf": [
               {
@@ -3299,6 +3532,7 @@
           "url",
           "stated_rent",
           "rent_override",
+          "rent_comps",
           "price_change",
           "first_seen"
         ],
@@ -3450,12 +3684,20 @@
             },
             "type": "array",
             "title": "Series"
+          },
+          "benchmarks": {
+            "items": {
+              "$ref": "#/components/schemas/Benchmark"
+            },
+            "type": "array",
+            "title": "Benchmarks"
           }
         },
         "type": "object",
         "required": [
           "summary",
-          "series"
+          "series",
+          "benchmarks"
         ],
         "title": "MarketDetail"
       },
@@ -3508,10 +3750,6 @@
             },
             "type": "array",
             "title": "Sources"
-          },
-          "demo": {
-            "type": "boolean",
-            "title": "Demo"
           }
         },
         "type": "object",
@@ -3521,8 +3759,7 @@
           "home_value",
           "gross_yield",
           "rent_spark",
-          "sources",
-          "demo"
+          "sources"
         ],
         "title": "MarketSummary"
       },
@@ -4646,6 +4883,7 @@
             "enum": [
               "override",
               "stated",
+              "comps",
               "model"
             ],
             "title": "Source"
@@ -5295,10 +5533,6 @@
           "interest_rate": {
             "type": "number",
             "title": "Interest Rate"
-          },
-          "demo": {
-            "type": "boolean",
-            "title": "Demo"
           }
         },
         "type": "object",
@@ -5310,8 +5544,7 @@
           "buy",
           "watch",
           "new_matches",
-          "interest_rate",
-          "demo"
+          "interest_rate"
         ],
         "title": "Summary"
       },

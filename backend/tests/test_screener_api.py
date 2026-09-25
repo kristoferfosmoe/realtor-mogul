@@ -1,21 +1,26 @@
 from collections.abc import Iterator
-from datetime import date
 from pathlib import Path
 
 import httpx
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from mogul.api.app import create_app
-from mogul.db.models import Base
+from mogul.api.routes import screener
+from mogul.config import Settings
+from mogul.db.models import Base, IngestionRun, Listing
 from mogul.db.session import get_session
-from mogul.ingest.demo import DemoSource
-from mogul.ingest.pipeline import run_source
-from mogul.listings.sources import DemoListingSource
-from mogul.listings.store import run_listing_source
+from mogul.ingest.base import RawFile
+from mogul.ingest.census import AcsSource
+from mogul.ingest.hud import HudFmrSource
+from mogul.ingest.pipeline import store
+from mogul.listings.comps import run_comps
+from mogul.listings.sources import RentCastSource
+from mogul.listings.store import store_listings
+from tests.market_data import seed_markets
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -39,9 +44,24 @@ def client(db: Session) -> Iterator[TestClient]:
 
 
 @pytest.fixture
-def demo(db: Session, tmp_path: Path) -> None:
-    run_source(db, DemoSource(end=date.today()), httpx.Client(), tmp_path)
-    run_listing_source(db, DemoListingSource(), httpx.Client(), tmp_path)
+def listings(db: Session) -> None:
+    """Zillow/FRED-shaped markets, then RentCast listings in San Antonio and Memphis."""
+    seed_markets(db)
+    files = [RawFile("sale.json", (FIXTURES / "rentcast_sale.json").read_bytes())]
+    store_listings(db, "rentcast", RentCastSource("key", ["x, TN"]).parse(files))
+    db.commit()
+
+
+def _benchmarks(db: Session) -> None:
+    hud = [RawFile("2026_TN.json", (FIXTURES / "hud_statedata_tn_2026.json").read_bytes())]
+    store(db, "hud", HudFmrSource("t").parse(hud))
+    acs = [
+        RawFile("2024_us.json", (FIXTURES / "acs_us_2024.json").read_bytes()),
+        RawFile("2024_metro.json", (FIXTURES / "acs_metro_2024.json").read_bytes()),
+        RawFile("2024_zip.json", (FIXTURES / "acs_zip_2024.json").read_bytes()),
+    ]
+    store(db, "census", AcsSource().parse(acs))
+    db.commit()
 
 
 def test_default_buy_box_created(client: TestClient) -> None:
@@ -64,12 +84,13 @@ def test_buy_box_crud_and_validation(client: TestClient) -> None:
     assert client.delete(f"/buy-boxes/{box['id']}").status_code == 204
 
 
-def test_recommendations_with_demo_data(client: TestClient, demo: None) -> None:
+def test_recommendations(client: TestClient, listings: None) -> None:
     box = client.get("/buy-boxes").json()[0]
     body = client.get(f"/buy-boxes/{box['id']}/recommendations").json()
     s = body["summary"]
-    assert s["scanned"] == 75 and s["evaluated"] + s["filtered_out"] == 75
-    assert s["demo"] is True
+    assert s["scanned"] == 2 and s["evaluated"] + s["filtered_out"] == 2
+    assert s["evaluated"] >= 1
+    assert "demo" not in s
     assert s["interest_rate"] == pytest.approx(0.0621 + 0.0075, abs=0.002)
     scores = [r["evaluation"]["score"] for r in body["rows"]]
     assert scores == sorted(scores, reverse=True)
@@ -84,7 +105,7 @@ def test_recommendations_with_demo_data(client: TestClient, demo: None) -> None:
     }
 
 
-def test_override_rent_and_add_to_watchlist(client: TestClient, demo: None) -> None:
+def test_override_rent_and_add_to_watchlist(client: TestClient, listings: None) -> None:
     box = client.get("/buy-boxes").json()[0]
     row = client.get(f"/buy-boxes/{box['id']}/recommendations").json()["rows"][-1]
     lid = row["listing"]["id"]
@@ -105,8 +126,8 @@ def test_override_rent_and_add_to_watchlist(client: TestClient, demo: None) -> N
     )
 
 
-def test_import_csv_and_alerts(client: TestClient, demo: None) -> None:
-    box = client.get("/buy-boxes").json()[0]  # created (and "viewed") after the demo load
+def test_import_csv_and_alerts(client: TestClient, listings: None) -> None:
+    box = client.get("/buy-boxes").json()[0]  # created (and "viewed") after the first load
     res = client.post(
         "/listings/import", json={"csv": (FIXTURES / "redfin_export.csv").read_text()}
     )
@@ -127,9 +148,9 @@ def test_import_csv_and_alerts(client: TestClient, demo: None) -> None:
 
     sources = client.get("/listings/sources").json()
     assert sources["rentcast_configured"] is False
-    assert {r["source"] for r in sources["runs"]} >= {"redfin", "demo-listings"}
+    assert [r["source"] for r in sources["runs"]] == ["redfin", "redfin"]
     # Listing runs stay out of the Markets page's source list.
-    assert {r["source"] for r in client.get("/markets/sources").json()["runs"]} == {"demo"}
+    assert client.get("/markets/sources").json()["runs"] == []
 
 
 def test_bad_import_and_missing_rows(client: TestClient) -> None:
@@ -137,3 +158,105 @@ def test_bad_import_and_missing_rows(client: TestClient) -> None:
     box = client.get("/buy-boxes").json()[0]
     assert client.get("/listings/99", params={"buy_box_id": box["id"]}).status_code == 404
     assert client.get("/buy-boxes/99/recommendations").status_code == 404
+
+
+def test_rent_uses_zip_position_and_hud_rents_where_zillow_has_none(
+    client: TestClient, db: Session
+) -> None:
+    seed_markets(db)
+    _benchmarks(db)
+    csv = (
+        "Address,City,State,Zip,Price,Beds,Property Type\n"
+        "4417 Walnut Grove Rd,Memphis,TN,38117,189000,3,Single Family\n"
+        "1 Music Row,Nashville,TN,37203,300000,3,Single Family\n"
+    )
+    assert client.post("/listings/import", json={"csv": csv}).json()["new"] == 2
+    box = client.get("/buy-boxes").json()[0]
+    rows = client.get(f"/buy-boxes/{box['id']}/recommendations").json()["rows"]
+    rent = {r["listing"]["city"]: r["rent"] for r in rows}
+
+    # Memphis: Zillow typical rent, scaled by ZIP 38117 vs the metro (ACS 1374 / 1145).
+    assert rent["Memphis"]["source"] == "model"
+    assert "Memphis typical rent" in rent["Memphis"]["basis"]
+    assert "ZIP 38117 ×1.20" in rent["Memphis"]["basis"]
+    # Nashville has no Zillow data here, so HUD's 3-bedroom fair market rent is used.
+    assert rent["Nashville"]["basis"].startswith("Nashville HUD fair market rent 3BR $2,195")
+    assert rent["Nashville"]["monthly"] == 2200
+
+
+class _RentCast:
+    def __init__(self) -> None:
+        self.requests: list[httpx.Request] = []
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(request)
+        assert request.headers["X-Api-Key"] == "key"
+        return httpx.Response(200, content=(FIXTURES / "rentcast_rent_avm.json").read_bytes())
+
+    def client(self) -> httpx.Client:
+        return httpx.Client(transport=httpx.MockTransport(self))
+
+
+def test_rent_comps_endpoint(
+    client: TestClient,
+    db: Session,
+    listings: None,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    box = client.get("/buy-boxes").json()[0]
+    multi = db.scalars(select(Listing).where(Listing.city == "Memphis")).one()
+    url = f"/listings/{multi.id}/rent-comps?buy_box_id={box['id']}"
+
+    monkeypatch.setattr(screener, "get_settings", lambda: Settings(rentcast_api_key=""))
+    res = client.post(url)
+    assert res.status_code == 422 and "MOGUL_RENTCAST_API_KEY" in res.json()["detail"]
+
+    rentcast = _RentCast()
+    overrides = client.app.dependency_overrides  # type: ignore[attr-defined]
+    overrides[screener.rentcast_client] = rentcast.client
+    monkeypatch.setattr(
+        screener,
+        "get_settings",
+        lambda: Settings(rentcast_api_key="key", raw_data_dir=str(tmp_path)),
+    )
+    detail = client.post(url).json()
+    # A duplex with 4 beds is looked up as one 2-bed unit, then doubled.
+    [request] = rentcast.requests
+    assert request.url.params["bedrooms"] == "2"
+    assert request.url.params["propertyType"] == "Multi-Family"
+    assert request.url.params["address"] == "12 Oak St, Memphis, TN 38104"
+    assert detail["rent"]["source"] == "comps" and detail["rent"]["confidence"] == "medium"
+    assert detail["rent"]["monthly"] == 2900
+    assert "from 2 comps" in detail["rent"]["basis"]
+    comps = detail["listing"]["rent_comps"]
+    assert comps["per_unit"] == 1450 and comps["units"] == 2
+    assert comps["comps"][0]["address"] == "4401 Walnut Grove Rd, Memphis, TN 38117"
+    assert list((tmp_path / "rentcast-avm").iterdir())  # raw response archived
+
+    # An override still beats comps.
+    client.patch(f"/listings/{multi.id}", json={"rent_override": 3000})
+    again = client.get(f"/listings/{multi.id}", params={"buy_box_id": box["id"]}).json()
+    assert again["rent"]["source"] == "override"
+
+
+def test_rents_command_spends_lookups_on_candidates_only(
+    client: TestClient, db: Session, listings: None, tmp_path: Path
+) -> None:
+    client.get("/buy-boxes")  # creates the default buy box
+    rentcast = _RentCast()
+    first = run_comps(db, rentcast.client(), "key", tmp_path, limit=1)
+    assert (first.status, first.series_count) == ("ok", 1)
+    assert len(rentcast.requests) == 1
+    # The next run skips the listing whose comps are fresh.
+    second = run_comps(db, rentcast.client(), "key", tmp_path, limit=5)
+    assert second.series_count == 1 and len(rentcast.requests) == 2
+    third = run_comps(db, rentcast.client(), "key", tmp_path, limit=5)
+    assert third.series_count == 0 and len(rentcast.requests) == 2
+    assert all(x.rent_comps for x in db.scalars(select(Listing)))
+
+    failed = run_comps(db, rentcast.client(), "", tmp_path, limit=5)
+    assert failed.status == "error" and "MOGUL_RENTCAST_API_KEY" in (failed.error or "")
+    assert set(db.scalars(select(IngestionRun.source))) == {"rentcast-rents"}
+    runs = client.get("/listings/sources").json()["runs"]
+    assert runs[0]["source"] == "rentcast-rents" and runs[0]["status"] == "error"

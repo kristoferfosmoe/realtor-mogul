@@ -17,6 +17,10 @@ services:
     environment:
       MOGUL_DATABASE_URL: postgresql+psycopg://mogul:mogul@db:5432/mogul
       MOGUL_CORS_ORIGINS: '["http://localhost:3000"]'
+      MOGUL_RAW_DATA_DIR: /data/raw
+      # The listing panel's "Get rent comps" button calls RentCast from the API.
+      MOGUL_RENTCAST_API_KEY: ${MOGUL_RENTCAST_API_KEY:-}
+    volumes: [rawdata:/data/raw]
     depends_on:
       db:
         condition: service_healthy
@@ -31,6 +35,9 @@ services:
       # Optional: set these in your shell or .env to sweep for-sale listings daily.
       MOGUL_RENTCAST_API_KEY: ${MOGUL_RENTCAST_API_KEY:-}
       MOGUL_LISTING_AREAS: ${MOGUL_LISTING_AREAS:-[]}
+      # Optional: HUD fair market rents need a free token; a Census key raises rate limits.
+      MOGUL_HUD_API_TOKEN: ${MOGUL_HUD_API_TOKEN:-}
+      MOGUL_CENSUS_API_KEY: ${MOGUL_CENSUS_API_KEY:-}
     volumes: [rawdata:/data/raw]
     depends_on: [api] # api applies migrations on start
     command:

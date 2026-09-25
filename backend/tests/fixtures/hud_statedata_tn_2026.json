@@ -1,0 +1,12 @@
+{
+  "data": {
+    "year": "2026",
+    "metroareas": [
+      {"metro_name": "Memphis, TN-MS-AR HUD Metro FMR Area", "code": "METRO32820M32820", "Efficiency": 1011, "One-Bedroom": 1074, "Two-Bedroom": 1229, "Three-Bedroom": 1594, "Four-Bedroom": 1742, "FMR Percentile": 40, "statename": "Tennessee", "statecode": "TN", "smallarea_status": "0"},
+      {"metro_name": "Nashville-Davidson--Murfreesboro--Franklin, TN HUD Metro FMR Area", "code": "METRO34980M34980", "Efficiency": 1512, "One-Bedroom": 1588, "Two-Bedroom": 1778, "Three-Bedroom": 2195, "Four-Bedroom": 2582, "FMR Percentile": 40, "statename": "Tennessee", "statecode": "TN", "smallarea_status": "0"}
+    ],
+    "counties": [
+      {"county_name": "Bedford County, TN", "fips_code": "4700399999", "Efficiency": 700, "One-Bedroom": 750, "Two-Bedroom": 900, "Three-Bedroom": 1200, "Four-Bedroom": 1300}
+    ]
+  }
+}

@@ -12,7 +12,6 @@ from mogul.db.models import Base, Geography, Listing
 from mogul.ingest.base import RawFile
 from mogul.listings.normalize import address_key, default_units, match_market, property_type
 from mogul.listings.sources import (
-    DemoListingSource,
     RentCastSource,
     parse_listing_csv,
     parse_rentcast,
@@ -179,9 +178,3 @@ def test_store_tracks_price_changes_and_delistings(session: Session) -> None:
     assert third.delisted == 1
     multi = session.scalars(select(Listing).where(Listing.property_type == "multi_2_4")).one()
     assert multi.status == "off_market" and multi.events[-1].event == "delisted"
-
-
-def test_demo_listings_are_deterministic() -> None:
-    a = list(DemoListingSource(today=date(2026, 1, 1)).parse([]))
-    assert a == list(DemoListingSource(today=date(2026, 1, 1)).parse([]))
-    assert len({x.source_id for x in a}) == len(a) > 50
