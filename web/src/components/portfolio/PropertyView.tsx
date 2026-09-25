@@ -11,13 +11,14 @@ import { signedPct } from "@/lib/markets";
 import { toneOf, typeLabel, VALUE_SOURCES } from "@/lib/portfolio";
 
 import { Kpi } from "./Kpi";
-import { Ledger } from "./Ledger";
+import { Ledger, type RentRangeTarget } from "./Ledger";
 import { LoanPanel, ProFormaPanel, RentRoll, Valuations } from "./SidePanels";
 
 export function PropertyView({ id }: { id: number }) {
   const router = useRouter();
   const [detail, setDetail] = useState<PropertyDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [rentRange, setRentRange] = useState<RentRangeTarget>(null);
 
   const reload = useCallback(() => {
     api
@@ -140,11 +141,28 @@ export function PropertyView({ id }: { id: number }) {
 
         <EquityChart title="Value, debt & equity" points={detail.monthly} />
         <ProFormaPanel detail={detail} />
-        <Ledger propertyId={prop.id} onChange={reload} />
+        <div id="ledger">
+          <Ledger
+            propertyId={prop.id}
+            purchaseDate={prop.purchase_date}
+            units={prop.units ?? 1}
+            leases={detail.leases}
+            rentRange={rentRange}
+            setRentRange={setRentRange}
+            onChange={reload}
+          />
+        </div>
       </div>
 
       <div className="col col-right">
-        <RentRoll detail={detail} onChange={reload} />
+        <RentRoll
+          detail={detail}
+          onChange={reload}
+          onRecordRent={(leaseId) => {
+            setRentRange({ leaseId, nonce: Date.now() });
+            document.getElementById("ledger")?.scrollIntoView({ behavior: "smooth" });
+          }}
+        />
         <LoanPanel detail={detail} />
         <Valuations detail={detail} onChange={reload} />
         {prop.notes && (

@@ -152,6 +152,14 @@ Tables (money is exact `NUMERIC(14,2)`; it records real transactions):
   plus keyword rules that guess a category from a bank description.
 - `statement`: CSV parser for bank and property-manager exports (signed Amount or
   Debit/Credit columns, US or ISO dates, `$1,234` and `(12.00)` style amounts).
+- `rent_schedule`: expands "rent of X/month from month A to month B" (flat or from a
+  lease, optional yearly step-up) into one ledger line per month. The API endpoint
+  `POST /portfolio/properties/{id}/transactions/rent-range`:
+  - **Preview:** `dry_run` returns every month without saving anything.
+  - **Duplicates:** each line carries a per-source, per-month hash, so re-running never
+    double-records. It can also skip months that already hold any rent.
+  - **Limits:** stops at the current month and covers up to 600 months per range.
+  - **Undo:** `bulk-delete` removes the lines it created.
 - `performance` (pure, given an as-of date):
   - **NOI** = income − operating expenses. Capex, debt service and uncategorized lines sit
     below NOI but count in cash flow; owner transfers are ignored.

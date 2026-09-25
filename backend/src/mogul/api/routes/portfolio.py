@@ -20,6 +20,7 @@ from mogul.db.session import get_session
 from mogul.engine import Deal, monthly_payment, xirr
 from mogul.portfolio.categories import CATEGORIES, CategoryId, group_of
 from mogul.portfolio.performance import MonthRow, Performance, cash_flows, monthly
+from mogul.portfolio.rent_schedule import month_start, schedule
 from mogul.portfolio.service import (
     PortfolioMonth,
     ProFormaComparison,
@@ -145,6 +146,52 @@ class ImportOut(BaseModel):
     skipped_duplicates: int
     guessed: int
     uncategorized: int
+
+
+class RentRangeIn(BaseModel):
+    """Record rent for a run of months in one step: a flat amount or a lease's rent."""
+
+    start_month: str = Field(pattern=r"^\d{4}-(0[1-9]|1[0-2])$", examples=["2024-01"])
+    end_month: str = Field(pattern=r"^\d{4}-(0[1-9]|1[0-2])$", examples=["2026-09"])
+    monthly_amount: Money | None = Field(None, gt=0, description="Defaults to the lease's rent")
+    lease_id: int | None = None
+    day_of_month: int = Field(1, ge=1, le=31, description="Clamped to the month's length")
+    annual_increase: float = Field(0.0, ge=-0.5, le=0.5, description="Step-up every 12 months")
+    category: Literal["rent", "other_income"] = "rent"
+    description: str | None = Field(None, max_length=500)
+    skip_months_with_rent: bool = Field(
+        True, description="Skip months that already have a rent entry from any source"
+    )
+    dry_run: bool = Field(False, description="Preview without saving")
+
+    @model_validator(mode="after")
+    def _amount_source(self) -> "RentRangeIn":
+        if self.monthly_amount is None and self.lease_id is None:
+            raise ValueError("give monthly_amount or lease_id")
+        if month_start(self.end_month) < month_start(self.start_month):
+            raise ValueError("end_month is before start_month")
+        return self
+
+
+class RentLineOut(BaseModel):
+    date: date
+    amount: Money
+    status: Literal["new", "already_recorded", "month_has_rent"]
+
+
+class RentRangeOut(BaseModel):
+    months: int
+    created: int
+    skipped_already_recorded: int
+    skipped_month_has_rent: int
+    total: Money  # of the lines created (or that would be, on a dry run)
+    description: str
+    lines: list[RentLineOut]
+    created_ids: list[int]
+
+
+class BulkDeleteIn(BaseModel):
+    ids: list[int] = Field(min_length=1, max_length=5000)
 
 
 class ValuationIn(BaseModel):
@@ -538,6 +585,100 @@ def import_transactions(property_id: int, body: ImportIn, db: DbSession) -> Impo
         guessed=sum(r.category_guessed and r.category != "uncategorized" for r in new),
         uncategorized=sum(r.category == "uncategorized" for r in new),
     )
+
+
+@router.post("/properties/{property_id}/transactions/rent-range")
+def record_rent_range(property_id: int, body: RentRangeIn, db: DbSession) -> RentRangeOut:
+    """Record rent for many months at once, one ledger line per month.
+
+    Stops at the current month: future rent is a projection, not a transaction.
+    """
+    prop = _get_property(db, property_id)
+    start, end = month_start(body.start_month), month_start(body.end_month)
+    this_month = date.today().replace(day=1)
+    if end > this_month:
+        raise HTTPException(
+            422,
+            detail=f"rent can be recorded through {this_month:%Y-%m}; "
+            "later months haven't happened yet",
+        )
+
+    lease = None
+    if body.lease_id is not None:
+        lease = next((x for x in prop.leases if x.id == body.lease_id), None)
+        if lease is None:
+            raise HTTPException(422, detail="lease_id is not a lease on this property")
+        # Only the months the lease covers.
+        start = max(start, lease.start_date.replace(day=1))
+        if lease.end_date is not None:
+            end = min(end, lease.end_date.replace(day=1))
+        if end < start:
+            raise HTTPException(422, detail="the lease doesn't cover any of those months")
+    monthly = body.monthly_amount if body.monthly_amount is not None else lease.monthly_rent  # type: ignore[union-attr]
+
+    description = body.description or (
+        " · ".join(p for p in ("Rent", lease.unit and f"Unit {lease.unit}", lease.tenant) if p)
+        if lease
+        else "Rent"
+    )
+    existing = list(prop.transactions)
+    try:
+        lines = schedule(
+            start=start,
+            end=end,
+            monthly=monthly,
+            day_of_month=body.day_of_month,
+            annual_increase=body.annual_increase,
+            source_key=f"lease-{lease.id}" if lease else f"flat-{body.category}",
+            recorded_hashes={t.import_hash for t in existing if t.import_hash},
+            months_with_rent={(t.date.year, t.date.month) for t in existing if t.category == "rent"}
+            if body.skip_months_with_rent
+            else set(),
+        )
+    except ValueError as e:
+        raise HTTPException(422, detail=str(e)) from e
+
+    new = [ln for ln in lines if ln.status == "new"]
+    created: list[Transaction] = []
+    if not body.dry_run:
+        created = [
+            Transaction(
+                property_id=property_id,
+                date=ln.date,
+                amount=ln.amount,
+                category=body.category,
+                description=description,
+                import_hash=ln.import_hash,
+            )
+            for ln in new
+        ]
+        db.add_all(created)
+        db.commit()
+    return RentRangeOut(
+        months=len(lines),
+        created=len(new),
+        skipped_already_recorded=sum(ln.status == "already_recorded" for ln in lines),
+        skipped_month_has_rent=sum(ln.status == "month_has_rent" for ln in lines),
+        total=sum((ln.amount for ln in new), Decimal(0)),
+        description=description,
+        lines=[RentLineOut(date=ln.date, amount=ln.amount, status=ln.status) for ln in lines],
+        created_ids=[t.id for t in created],
+    )
+
+
+@router.post("/properties/{property_id}/transactions/bulk-delete")
+def bulk_delete_transactions(property_id: int, body: BulkDeleteIn, db: DbSession) -> dict[str, int]:
+    """Delete several ledger lines of one property (e.g. undoing a rent range)."""
+    _get_property(db, property_id)
+    rows = db.scalars(
+        select(Transaction).where(
+            Transaction.property_id == property_id, Transaction.id.in_(body.ids)
+        )
+    ).all()
+    for t in rows:
+        db.delete(t)
+    db.commit()
+    return {"deleted": len(rows)}
 
 
 @router.patch("/transactions/{transaction_id}")

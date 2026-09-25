@@ -2,14 +2,35 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { api, type Category, type Transaction, type TransactionIn } from "@/lib/api";
+import { api, type Category, type Lease, type Transaction, type TransactionIn } from "@/lib/api";
 import { usd } from "@/lib/format";
 import { todayIso } from "@/lib/portfolio";
+
+import { RentRangeForm } from "./RentRangeForm";
+
+/** Open state of the rent-range form: which lease to preselect (null = flat amount). */
+export type RentRangeTarget = { leaseId: number | null; nonce: number } | null;
 
 const OUTFLOW_GROUPS = new Set(["operating_expense", "capital_expense", "debt_service"]);
 
 /** Property ledger: add lines, import a bank CSV, recategorize, delete. */
-export function Ledger({ propertyId, onChange }: { propertyId: number; onChange: () => void }) {
+export function Ledger({
+  propertyId,
+  purchaseDate,
+  units,
+  leases,
+  rentRange,
+  setRentRange,
+  onChange,
+}: {
+  propertyId: number;
+  purchaseDate: string;
+  units: number;
+  leases: Lease[];
+  rentRange: RentRangeTarget;
+  setRentRange: (t: RentRangeTarget) => void;
+  onChange: () => void;
+}) {
   const [rows, setRows] = useState<Transaction[] | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [draft, setDraft] = useState({ date: todayIso(), category: "rent", amount: "", description: "" });
@@ -17,6 +38,7 @@ export function Ledger({ propertyId, onChange }: { propertyId: number; onChange:
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
   const [onlyUncategorized, setOnlyUncategorized] = useState(false);
   const [version, setVersion] = useState(0);
+  const [undo, setUndo] = useState<{ ids: number[]; text: string } | null>(null);
 
   useEffect(() => {
     api.categories().then(setCategories).catch(() => setCategories([]));
@@ -94,6 +116,13 @@ export function Ledger({ propertyId, onChange }: { propertyId: number; onChange:
               {uncategorized} UNCATEGORIZED
             </button>
           )}
+          <button
+            type="button"
+            className={`btn btn-sm ${rentRange ? "" : "btn-ghost"}`}
+            onClick={() => setRentRange(rentRange ? null : { leaseId: null, nonce: Date.now() })}
+          >
+            RECORD RENT
+          </button>
           <label className="btn btn-sm btn-ghost">
             IMPORT CSV
             <input
@@ -112,6 +141,49 @@ export function Ledger({ propertyId, onChange }: { propertyId: number; onChange:
           </button>
         </span>
       </div>
+
+      {rentRange && (
+        <RentRangeForm
+          key={rentRange.nonce}
+          propertyId={propertyId}
+          purchaseDate={purchaseDate}
+          units={units}
+          leases={leases}
+          presetLeaseId={rentRange.leaseId}
+          onClose={() => setRentRange(null)}
+          onRecorded={(r) => {
+            setRentRange(null);
+            setMessage(null);
+            setUndo({
+              ids: r.created_ids,
+              text: `Recorded ${r.created} months of rent (${usd(r.total)}) as "${r.description}".`,
+            });
+            changed();
+          }}
+        />
+      )}
+
+      {undo && (
+        <div className="undo-bar">
+          <span>{undo.text}</span>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={() =>
+              void api.bulkDeleteTransactions(propertyId, undo.ids).then((r) => {
+                setUndo(null);
+                setMessage({ text: `Undone: removed ${r.deleted} entries.` });
+                changed();
+              }, fail)
+            }
+          >
+            UNDO
+          </button>
+          <button type="button" className="btn btn-sm btn-ghost" aria-label="Dismiss" onClick={() => setUndo(null)}>
+            ✕
+          </button>
+        </div>
+      )}
 
       {csv != null && (
         <div className="row-form">

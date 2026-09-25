@@ -41,6 +41,8 @@ export type TransactionIn = Schemas["TransactionIn"];
 export type Category = Schemas["CategoryOut"];
 export type ImportResult = Schemas["ImportOut"];
 export type ValuationIn = Schemas["ValuationIn"];
+export type RentRangeIn = Schemas["RentRangeIn"];
+export type RentRange = Schemas["RentRangeOut"];
 
 export type BuyBox = Schemas["BuyBoxOut"];
 export type BuyBoxIn = Schemas["BuyBoxIn"];
@@ -141,6 +143,16 @@ export const api = {
     request<ImportResult>(`/portfolio/properties/${propertyId}/transactions/import`, {
       method: "POST",
       body: json({ csv }),
+    }),
+  recordRentRange: (propertyId: number, body: RentRangeIn) =>
+    request<RentRange>(`/portfolio/properties/${propertyId}/transactions/rent-range`, {
+      method: "POST",
+      body: json(body),
+    }),
+  bulkDeleteTransactions: (propertyId: number, ids: number[]) =>
+    request<{ deleted: number }>(`/portfolio/properties/${propertyId}/transactions/bulk-delete`, {
+      method: "POST",
+      body: json({ ids }),
     }),
   patchTransaction: (id: number, body: { category?: TransactionIn["category"]; description?: string }) =>
     request<Transaction>(`/portfolio/transactions/${id}`, { method: "PATCH", body: json(body) }),

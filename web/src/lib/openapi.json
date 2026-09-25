@@ -963,6 +963,116 @@
         }
       }
     },
+    "/portfolio/properties/{property_id}/transactions/rent-range": {
+      "post": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Record Rent Range",
+        "description": "Record rent for many months at once, one ledger line per month.\n\nStops at the current month: future rent is a projection, not a transaction.",
+        "operationId": "record_rent_range_portfolio_properties__property_id__transactions_rent_range_post",
+        "parameters": [
+          {
+            "name": "property_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Property Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RentRangeIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentRangeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portfolio/properties/{property_id}/transactions/bulk-delete": {
+      "post": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Bulk Delete Transactions",
+        "description": "Delete several ledger lines of one property (e.g. undoing a rent range).",
+        "operationId": "bulk_delete_transactions_portfolio_properties__property_id__transactions_bulk_delete_post",
+        "parameters": [
+          {
+            "name": "property_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Property Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkDeleteIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "title": "Response Bulk Delete Transactions Portfolio Properties  Property Id  Transactions Bulk Delete Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/portfolio/transactions/{transaction_id}": {
       "patch": {
         "tags": [
@@ -1847,6 +1957,24 @@
         },
         "type": "object",
         "title": "Assumptions"
+      },
+      "BulkDeleteIn": {
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "maxItems": 5000,
+            "minItems": 1,
+            "title": "Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ids"
+        ],
+        "title": "BulkDeleteIn"
       },
       "BuyBoxIn": {
         "properties": {
@@ -4544,6 +4672,197 @@
           "basis"
         ],
         "title": "RentEstimate"
+      },
+      "RentLineOut": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "amount": {
+            "type": "number",
+            "title": "Amount"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "new",
+              "already_recorded",
+              "month_has_rent"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "amount",
+          "status"
+        ],
+        "title": "RentLineOut"
+      },
+      "RentRangeIn": {
+        "properties": {
+          "start_month": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "title": "Start Month",
+            "examples": [
+              "2024-01"
+            ]
+          },
+          "end_month": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "title": "End Month",
+            "examples": [
+              "2026-09"
+            ]
+          },
+          "monthly_amount": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                  }
+                ],
+                "gt": 0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monthly Amount",
+            "description": "Defaults to the lease's rent"
+          },
+          "lease_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lease Id"
+          },
+          "day_of_month": {
+            "type": "integer",
+            "maximum": 31.0,
+            "minimum": 1.0,
+            "title": "Day Of Month",
+            "description": "Clamped to the month's length",
+            "default": 1
+          },
+          "annual_increase": {
+            "type": "number",
+            "maximum": 0.5,
+            "minimum": -0.5,
+            "title": "Annual Increase",
+            "description": "Step-up every 12 months",
+            "default": 0.0
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "rent",
+              "other_income"
+            ],
+            "title": "Category",
+            "default": "rent"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "skip_months_with_rent": {
+            "type": "boolean",
+            "title": "Skip Months With Rent",
+            "description": "Skip months that already have a rent entry from any source",
+            "default": true
+          },
+          "dry_run": {
+            "type": "boolean",
+            "title": "Dry Run",
+            "description": "Preview without saving",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_month",
+          "end_month"
+        ],
+        "title": "RentRangeIn",
+        "description": "Record rent for a run of months in one step: a flat amount or a lease's rent."
+      },
+      "RentRangeOut": {
+        "properties": {
+          "months": {
+            "type": "integer",
+            "title": "Months"
+          },
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          },
+          "skipped_already_recorded": {
+            "type": "integer",
+            "title": "Skipped Already Recorded"
+          },
+          "skipped_month_has_rent": {
+            "type": "integer",
+            "title": "Skipped Month Has Rent"
+          },
+          "total": {
+            "type": "number",
+            "title": "Total"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/RentLineOut"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "created_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Created Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "months",
+          "created",
+          "skipped_already_recorded",
+          "skipped_month_has_rent",
+          "total",
+          "description",
+          "lines",
+          "created_ids"
+        ],
+        "title": "RentRangeOut"
       },
       "RunOut": {
         "properties": {

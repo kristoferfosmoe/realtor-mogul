@@ -187,3 +187,106 @@ def test_portfolio_totals(client: TestClient) -> None:
     assert {s["label"] for s in body["by_type"]} == {"single_family", "condo"}
     assert body["months"][-1]["month"] == TODAY.isoformat()
     assert body["months"][-1]["value"] == pytest.approx(500000)
+
+
+def _month(d: date) -> str:
+    return f"{d:%Y-%m}"
+
+
+def test_rent_range_flat_amount_preview_record_and_undo(client: TestClient) -> None:
+    pid = _property(client, units=1)["property"]["id"]
+    this_month = TODAY.replace(day=1)
+    start = BOUGHT.replace(day=1)
+    body = {"start_month": _month(start), "end_month": _month(this_month), "monthly_amount": 1800,
+            "annual_increase": 0.03, "day_of_month": 5}  # fmt: skip
+    months = (this_month.year - start.year) * 12 + this_month.month - start.month + 1
+
+    preview = client.post(
+        f"/portfolio/properties/{pid}/transactions/rent-range", json={**body, "dry_run": True}
+    ).json()
+    assert preview["months"] == preview["created"] == months
+    assert preview["created_ids"] == []
+    assert client.get(f"/portfolio/properties/{pid}/transactions").json() == []
+    assert preview["lines"][0]["amount"] == 1800 and preview["lines"][12]["amount"] == 1854
+
+    done = client.post(f"/portfolio/properties/{pid}/transactions/rent-range", json=body).json()
+    assert done["created"] == months and len(done["created_ids"]) == months
+    assert done["total"] == pytest.approx(preview["total"])
+    txs = client.get(f"/portfolio/properties/{pid}/transactions").json()
+    assert len(txs) == months and all(
+        t["category"] == "rent" and t["date"][-2:] == "05" for t in txs
+    )
+    perf = client.get(f"/portfolio/properties/{pid}").json()["performance"]
+    assert perf["t12"]["income"] > 12 * 1800
+
+    # Re-running the same range records nothing new.
+    again = client.post(f"/portfolio/properties/{pid}/transactions/rent-range", json=body).json()
+    assert again["created"] == 0 and again["skipped_already_recorded"] == months
+
+    undo = client.post(
+        f"/portfolio/properties/{pid}/transactions/bulk-delete", json={"ids": done["created_ids"]}
+    )
+    assert undo.json() == {"deleted": months}
+    assert client.get(f"/portfolio/properties/{pid}/transactions").json() == []
+
+
+def test_rent_range_from_lease_skips_months_with_rent(client: TestClient) -> None:
+    pid = _property(client)["property"]["id"]
+    lease_start = TODAY.replace(day=1) - timedelta(days=150)  # about five months back
+    lease = client.post(
+        f"/portfolio/properties/{pid}/leases",
+        json={
+            "unit": "A",
+            "tenant": "J. Doe",
+            "start_date": lease_start.isoformat(),
+            "monthly_rent": 1400,
+            "deposit": 0,
+        },  # fmt: skip
+    ).json()
+    # One month was already imported from the bank.
+    client.post(
+        f"/portfolio/properties/{pid}/transactions",
+        json={"date": TODAY.replace(day=2).isoformat(), "amount": 1400, "category": "rent"},
+    )
+    res = client.post(
+        f"/portfolio/properties/{pid}/transactions/rent-range",
+        json={"start_month": _month(BOUGHT), "end_month": _month(TODAY), "lease_id": lease["id"]},
+    ).json()
+    # Clipped to the lease's months, minus the one already holding rent.
+    lease_months = (TODAY.year - lease_start.year) * 12 + TODAY.month - lease_start.month + 1
+    assert res["months"] == lease_months
+    assert res["skipped_month_has_rent"] == 1 and res["created"] == lease_months - 1
+    assert res["description"] == "Rent · Unit A · J. Doe"
+    assert {ln["amount"] for ln in res["lines"]} == {1400}
+
+
+@pytest.mark.parametrize(
+    ("change", "message"),
+    [
+        ({"end_month": "2999-01"}, "haven't happened yet"),
+        ({"monthly_amount": None}, "monthly_amount or lease_id"),
+        ({"start_month": "2024-13"}, "String should match pattern"),
+        ({"end_month": "2020-01", "start_month": "2021-01"}, "before start_month"),
+        ({"lease_id": 999}, "not a lease on this property"),
+    ],
+)
+def test_rent_range_validation(client: TestClient, change: dict, message: str) -> None:  # type: ignore[type-arg]
+    pid = _property(client)["property"]["id"]
+    body = {"start_month": "2024-01", "end_month": "2024-06", "monthly_amount": 1000, **change}
+    res = client.post(f"/portfolio/properties/{pid}/transactions/rent-range", json=body)
+    assert res.status_code == 422
+    assert message in str(res.json()["detail"])
+
+
+def test_bulk_delete_is_scoped_to_the_property(client: TestClient) -> None:
+    a = _property(client, name="A")["property"]["id"]
+    b = _property(client, name="B")["property"]["id"]
+    tx = client.post(
+        f"/portfolio/properties/{a}/transactions",
+        json={"date": TODAY.isoformat(), "amount": 10, "category": "rent"},
+    ).json()
+    res = client.post(
+        f"/portfolio/properties/{b}/transactions/bulk-delete", json={"ids": [tx["id"]]}
+    )
+    assert res.json() == {"deleted": 0}
+    assert len(client.get(f"/portfolio/properties/{a}/transactions").json()) == 1

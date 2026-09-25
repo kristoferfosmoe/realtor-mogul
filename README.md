@@ -4,9 +4,10 @@ A real-estate investment terminal. Underwrite rentals the way a trader watches
 tickers: live IRR, ROIC, cash-on-cash and DSCR as you change assumptions,
 sensitivity heatmaps, a watchlist screener, a Markets page tracking rent and
 home-value trends by metro, and a Portfolio that tracks what you own: ledger
-(with bank CSV import), rent roll, loan, market-indexed valuations, and actual
-returns against the original projection. A Screener ranks for-sale listings
-(RentCast or your own Redfin CSV export) against buy boxes with explained scores.
+(bank CSV import, or rent recorded for whole periods at once), rent roll, loan,
+market-indexed valuations, and actual returns against the original projection.
+A Screener ranks for-sale listings (RentCast or your own Redfin CSV export)
+against buy boxes with explained scores.
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Layout

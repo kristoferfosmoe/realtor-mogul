@@ -329,6 +329,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/portfolio/properties/{property_id}/transactions/rent-range": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record Rent Range
+         * @description Record rent for many months at once, one ledger line per month.
+         *
+         *     Stops at the current month: future rent is a projection, not a transaction.
+         */
+        post: operations["record_rent_range_portfolio_properties__property_id__transactions_rent_range_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portfolio/properties/{property_id}/transactions/bulk-delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Delete Transactions
+         * @description Delete several ledger lines of one property (e.g. undoing a rent range).
+         */
+        post: operations["bulk_delete_transactions_portfolio_properties__property_id__transactions_bulk_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/portfolio/transactions/{transaction_id}": {
         parameters: {
             query?: never;
@@ -698,6 +740,11 @@ export interface components {
              * @default 0.06
              */
             selling_costs_pct: number;
+        };
+        /** BulkDeleteIn */
+        BulkDeleteIn: {
+            /** Ids */
+            ids: number[];
         };
         /** BuyBoxIn */
         BuyBoxIn: {
@@ -1639,6 +1686,95 @@ export interface components {
             confidence: "high" | "medium" | "low";
             /** Basis */
             basis: string;
+        };
+        /** RentLineOut */
+        RentLineOut: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Amount */
+            amount: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "new" | "already_recorded" | "month_has_rent";
+        };
+        /**
+         * RentRangeIn
+         * @description Record rent for a run of months in one step: a flat amount or a lease's rent.
+         */
+        RentRangeIn: {
+            /**
+             * Start Month
+             * @example 2024-01
+             */
+            start_month: string;
+            /**
+             * End Month
+             * @example 2026-09
+             */
+            end_month: string;
+            /**
+             * Monthly Amount
+             * @description Defaults to the lease's rent
+             */
+            monthly_amount?: (number | string) | null;
+            /** Lease Id */
+            lease_id?: number | null;
+            /**
+             * Day Of Month
+             * @description Clamped to the month's length
+             * @default 1
+             */
+            day_of_month: number;
+            /**
+             * Annual Increase
+             * @description Step-up every 12 months
+             * @default 0
+             */
+            annual_increase: number;
+            /**
+             * Category
+             * @default rent
+             * @enum {string}
+             */
+            category: "rent" | "other_income";
+            /** Description */
+            description?: string | null;
+            /**
+             * Skip Months With Rent
+             * @description Skip months that already have a rent entry from any source
+             * @default true
+             */
+            skip_months_with_rent: boolean;
+            /**
+             * Dry Run
+             * @description Preview without saving
+             * @default false
+             */
+            dry_run: boolean;
+        };
+        /** RentRangeOut */
+        RentRangeOut: {
+            /** Months */
+            months: number;
+            /** Created */
+            created: number;
+            /** Skipped Already Recorded */
+            skipped_already_recorded: number;
+            /** Skipped Month Has Rent */
+            skipped_month_has_rent: number;
+            /** Total */
+            total: number;
+            /** Description */
+            description: string;
+            /** Lines */
+            lines: components["schemas"]["RentLineOut"][];
+            /** Created Ids */
+            created_ids: number[];
         };
         /** RunOut */
         RunOut: {
@@ -2696,6 +2832,78 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ImportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_rent_range_portfolio_properties__property_id__transactions_rent_range_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                property_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RentRangeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RentRangeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_delete_transactions_portfolio_properties__property_id__transactions_bulk_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                property_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkDeleteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
                 };
             };
             /** @description Validation Error */

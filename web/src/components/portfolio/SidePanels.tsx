@@ -21,7 +21,11 @@ function useAction(onChange: () => void) {
   return { error, run };
 }
 
-export function RentRoll({ detail, onChange }: Props) {
+export function RentRoll({
+  detail,
+  onChange,
+  onRecordRent,
+}: Props & { onRecordRent: (leaseId: number) => void }) {
   const { error, run } = useAction(onChange);
   const [draft, setDraft] = useState({ unit: "", tenant: "", start: todayIso(), end: "", rent: "" });
   const p = detail.performance;
@@ -68,7 +72,16 @@ export function RentRoll({ detail, onChange }: Props) {
                   </div>
                 </td>
                 <td className={l.active ? "up" : ""}>{usd(l.monthly_rent)}</td>
-                <td>
+                <td style={{ whiteSpace: "nowrap" }}>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    title="Record this lease's rent for a range of months"
+                    aria-label={`Record rent for lease ${l.unit || l.tenant || l.id}`}
+                    onClick={() => onRecordRent(l.id)}
+                  >
+                    $
+                  </button>
                   {l.active && (
                     <button type="button" className="btn btn-ghost btn-sm" title="End lease today" onClick={() => void endToday(l)}>
                       END
