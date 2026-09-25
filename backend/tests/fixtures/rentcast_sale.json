@@ -1,0 +1,47 @@
+[
+  {
+    "id": "5500-Grand-Lake-Dr,-San-Antonio,-TX-78244",
+    "formattedAddress": "5500 Grand Lake Dr, San Antonio, TX 78244",
+    "addressLine1": "5500 Grand Lake Dr",
+    "addressLine2": null,
+    "city": "San Antonio",
+    "state": "TX",
+    "zipCode": "78244",
+    "county": "Bexar",
+    "latitude": 29.475962,
+    "longitude": -98.351442,
+    "propertyType": "Single Family",
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "squareFootage": 1878,
+    "lotSize": 8850,
+    "yearBuilt": 1973,
+    "hoa": {"fee": 175},
+    "status": "Active",
+    "price": 229900,
+    "listingType": "Standard",
+    "listedDate": "2024-06-24T00:00:00.000Z",
+    "removedDate": null,
+    "createdDate": "2021-06-25T00:00:00.000Z",
+    "lastSeenDate": "2024-09-30T13:11:47.157Z",
+    "daysOnMarket": 99,
+    "mlsName": "SanAntonio",
+    "mlsNumber": "1798591",
+    "history": {
+      "2024-06-24": {"event": "Sale Listing", "price": 234900, "listingType": "Standard", "listedDate": "2024-06-24T00:00:00.000Z", "removedDate": null, "daysOnMarket": 99},
+      "2024-08-10": {"event": "Sale Listing", "price": 229900, "listingType": "Standard", "listedDate": "2024-06-24T00:00:00.000Z", "removedDate": null, "daysOnMarket": 99}
+    }
+  },
+  {
+    "id": "12-Oak-St,-Memphis,-TN-38104",
+    "addressLine1": "12 Oak St",
+    "city": "Memphis",
+    "state": "TN",
+    "zipCode": "38104",
+    "propertyType": "Multi-Family",
+    "bedrooms": 4,
+    "price": 310000,
+    "status": "Active"
+  },
+  {"id": "no-price", "addressLine1": "1 Nowhere", "status": "Active"}
+]

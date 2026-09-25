@@ -1,0 +1,5 @@
+SALE TYPE,SOLD DATE,PROPERTY TYPE,ADDRESS,CITY,STATE OR PROVINCE,ZIP OR POSTAL CODE,PRICE,BEDS,BATHS,LOCATION,SQUARE FEET,LOT SIZE,YEAR BUILT,DAYS ON MARKET,$/SQUARE FEET,HOA/MONTH,STATUS,NEXT OPEN HOUSE START TIME,NEXT OPEN HOUSE END TIME,URL (SEE https://www.redfin.com/buy-a-home/comparative-market-analysis FOR INFO ON PRICING),SOURCE,MLS#,FAVORITE,INTERESTED,LATITUDE,LONGITUDE
+MLS Listing,,Single Family Residential,4417 Walnut Grove Rd,Memphis,TN,38117,189000,3,2,East Memphis,1540,9000,1958,12,123,,Active,,,https://www.redfin.com/TN/Memphis/4417-Walnut-Grove-Rd-38117/home/1,MAAR,10180001,N,Y,35.12,-89.9
+MLS Listing,,Multi-Family (2-4 Unit),88 Poplar Ave,Memphis,TN,38103,265000,6,4,Downtown,2400,5000,1925,41,110,,Active,,,https://www.redfin.com/TN/Memphis/88-Poplar-Ave-38103/home/2,MAAR,10180002,N,Y,35.14,-90.05
+MLS Listing,,Condo/Co-op,500 Harbor Way #4B,Tampa,FL,33602,335000,2,2,Channelside,1100,,2006,5,305,410,Contingent,,,https://www.redfin.com/FL/Tampa/500-Harbor-Way-33602/unit-4B/home/3,Stellar,T3500001,N,Y,27.94,-82.45
+"In accordance with local MLS rules, some MLS listings are not included in the download"

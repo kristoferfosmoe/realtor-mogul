@@ -178,14 +178,65 @@ UI:
   ledger (add, paste/upload CSV, recategorize inline, filter uncategorized), rent roll,
   loan and valuations.
 
-### Listings and recommendations (later)
-- **Listings:** for-sale listings plus their status and price history, duplicates merged
-  across sources, a rent estimate (market rent by ZIP and bedroom count, adjusted with
-  comps, a model later), and an automatic pro forma.
-- **Recommendations:** a user-defined buy box filters listings, each gets a pro forma,
-  then a score (returns, market rent trend, risk, and concentration measured against
-  the actual portfolio's allocation), then a ranking. Every result shows *why*. Alerts
-  fire when a new listing matches.
+### Listings and screener (built)
+Tables: `listing` (one row per source listing; `address_key` is a normalized address
+for spotting the same property across sources; `rent_override` is set by the user),
+`listing_event` (listed / price_change / pending / sold / delisted history) and
+`buy_box` (criteria + assumptions as JSON documents, plus `last_viewed_at` for alerts).
+
+Sources (`mogul.listings.sources`), run by `python -m mogul.ingest listings …`:
+
+| Source | How | Notes |
+|---|---|---|
+| RentCast `/v1/listings/sale` | `MOGUL_RENTCAST_API_KEY` + `MOGUL_LISTING_AREAS` | Full sweep per city: listings missing from a sweep are marked delisted |
+| CSV upload | Screener → Import | Redfin "Download All" exports are recognized; generic columns work too, including stated rent and units for multifamily and commercial |
+| `demo` | `make demo-data` | Synthetic, labeled DEMO, deleted by the first real fetch |
+
+Metro matching is by principal city in the metro's name ("Fort Lauderdale" matches
+"Miami-Fort Lauderdale-…, FL"). Suburbs fall back to national data until a ZIP→CBSA
+crosswalk is added.
+
+**Rent estimate** (`rent.py`), in order of priority:
+1. The user's override (high confidence).
+2. Rent stated in the listing (medium).
+3. A model estimate (low): the metro's typical rent (ZORI), × a bedroom factor, × a
+   size factor clamped to 0.85–1.2, × 0.9 per unit for multifamily. It shows its basis.
+
+Comps-based estimates (RentCast AVM or rental listings) are the planned upgrade.
+
+**Screening** (`scoring.py`, pure):
+1. **Hard filters:** status, markets, property types, price, beds, days on market, year built.
+2. **Underwriting:** each remaining listing goes through the engine using the buy box's
+   assumptions. Tax and insurance are a percentage of price; HOA comes from the listing.
+   The interest rate is the current 30-year average plus an investor spread. Growth is
+   the market's 5-year compound growth, clamped to 0–3% by default, or a fixed rate.
+3. **Checks:** IRR, cash-on-cash, DSCR and (optionally) cap rate against the targets.
+4. **Score (0–100):**
+
+   | Component | Weight | Measures |
+   |---|---|---|
+   | Returns | 40 | IRR vs. target |
+   | Cash | 20 | Cash-on-cash vs. target |
+   | Market | 15 | Market rent growth |
+   | Risk | 15 | IRR if rent is 10% lower, DSCR headroom, rent-estimate confidence |
+   | Fit | 10 | 1 − share of your portfolio already in that market |
+
+5. **Signal:**
+   - STRONG BUY: all targets met and score ≥ 85.
+   - BUY: all targets met.
+   - WATCH: IRR within 2 points of target, or only one target missed.
+   - PASS: everything else.
+
+   Every result carries plain-language reasons.
+
+**Alerts:** BUY-or-better matches first seen after a buy box was last viewed. The
+Screener tab shows the count; viewing the box clears it.
+
+UI: the **Screener** page has buy-box tabs and an editor, a ranked results grid
+(signal, score, price and price cuts, estimated rent with a confidence dot, cap,
+cash-on-cash, IRR, DSCR, days on market, NEW), and a listing panel with score
+components, reasons, a rent override, price history, and "Open in analyzer" (which
+saves the listing as a watchlist deal using the buy box's assumptions).
 
 ## Roadmap
 
@@ -193,5 +244,5 @@ UI:
 2. ✅ Underwriting engine, deal analyzer, watchlist.
 3. ✅ Market rent ingestion + Markets page (rent-trend charts, growth defaults).
 4. ✅ Portfolio tracking (ledger, CSV import, rent roll, valuations, actual vs. projected).
-5. Listings ingestion, rent estimation, screener and recommendations, alerts.
+5. ✅ Listings (RentCast, CSV), rent estimation, screener and recommendations, alerts.
 6. Commercial underwriting (rent roll, NNN, TI/LC), Monte Carlo, after-tax returns, auth.

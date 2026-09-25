@@ -10,14 +10,32 @@ const NAV = [
   { href: "/", label: "ANALYZER" },
   { href: "/markets", label: "MARKETS" },
   { href: "/portfolio", label: "PORTFOLIO" },
+  { href: "/screener", label: "SCREENER" },
   { href: "/watchlist", label: "WATCHLIST" },
 ];
-const COMING = ["SCREENER"];
+const COMING: string[] = [];
 
 export function TopBar() {
   const pathname = usePathname();
   const [apiUp, setApiUp] = useState<boolean | null>(null);
   const [now, setNow] = useState<Date | null>(null);
+  const [alerts, setAlerts] = useState(0);
+
+  // New BUY signals across buy boxes; the Screener clears them when viewed.
+  useEffect(() => {
+    const load = () =>
+      api
+        .alerts()
+        .then((a) => setAlerts(a.total_new))
+        .catch(() => undefined);
+    void load();
+    const timer = setInterval(load, 60_000);
+    window.addEventListener("screener-seen", load);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("screener-seen", load);
+    };
+  }, []);
 
   useEffect(() => {
     const ping = () =>
@@ -54,6 +72,11 @@ export function TopBar() {
             }
           >
             {n.label}
+            {n.href === "/screener" && alerts > 0 && (
+              <em className="alert-badge" title={`${alerts} new BUY signals`}>
+                {alerts}
+              </em>
+            )}
           </Link>
         ))}
         {COMING.map((label) => (

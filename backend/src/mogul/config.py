@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     raw_data_dir: str = "./data/raw"
     # How many of the largest metros to ingest from Zillow (by Zillow's SizeRank).
     zillow_max_metros: int = 150
+    # Listings: RentCast API key and the areas to sweep, e.g. ["Memphis, TN"].
+    rentcast_api_key: str = ""
+    listing_areas: list[str] = []
 
 
 @lru_cache

@@ -1004,3 +1004,162 @@ textarea.text-input {
   display: flex;
   gap: 6px;
 }
+
+/* ---------- screener ---------- */
+
+.alert-badge {
+  font-style: normal;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--up);
+  color: #06140e;
+  text-align: center;
+}
+.screener-grid {
+  grid-template-columns: 300px minmax(0, 1fr) 380px;
+}
+@media (max-width: 1400px) {
+  .screener-grid {
+    grid-template-columns: 300px minmax(0, 1fr);
+  }
+  .screener-grid .col-right {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 820px) {
+  .screener-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.box-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 10px 12px 0;
+}
+.box-tabs button {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.box-tabs button.on {
+  color: var(--text);
+  border-color: var(--accent);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.chip {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.chip.on {
+  color: var(--text);
+  border-color: var(--info);
+  background: rgba(76, 141, 255, 0.12);
+}
+.chip-scroll {
+  max-height: 120px;
+  overflow-y: auto;
+}
+.score-bar {
+  position: relative;
+  width: 60px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--panel-3);
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+.score-bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 3px;
+}
+.conf {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.conf.high {
+  background: var(--up);
+}
+.conf.medium {
+  background: var(--accent);
+}
+.conf.low {
+  background: var(--down);
+}
+table.grid tr.selected td {
+  background: var(--panel-2);
+}
+table.grid tr.selected td:first-child {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.reasons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.reasons li {
+  padding: 5px 0 5px 16px;
+  position: relative;
+  font-size: 12px;
+  border-bottom: 1px dashed var(--border);
+}
+.reasons li::before {
+  position: absolute;
+  left: 0;
+  font-size: 10px;
+  top: 7px;
+}
+.reasons li.up::before {
+  content: "▲";
+  color: var(--up);
+}
+.reasons li.down::before {
+  content: "▼";
+  color: var(--down);
+}
+.reasons li.flat::before {
+  content: "•";
+  color: var(--accent);
+}
+.reasons li {
+  color: var(--text-2);
+}
+.component {
+  display: grid;
+  grid-template-columns: 70px 1fr 36px;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  padding: 2px 0;
+}
+.component .bar > div {
+  background: var(--accent);
+}
+.screener-grid table.grid th,
+.screener-grid table.grid td {
+  padding: 5px 7px;
+}

@@ -28,9 +28,19 @@ services:
     environment:
       MOGUL_DATABASE_URL: postgresql+psycopg://mogul:mogul@db:5432/mogul
       MOGUL_RAW_DATA_DIR: /data/raw
+      # Optional: set these in your shell or .env to sweep for-sale listings daily.
+      MOGUL_RENTCAST_API_KEY: ${MOGUL_RENTCAST_API_KEY:-}
+      MOGUL_LISTING_AREAS: ${MOGUL_LISTING_AREAS:-[]}
     volumes: [rawdata:/data/raw]
     depends_on: [api] # api applies migrations on start
-    command: ["sh", "-c", "sleep 20; while true; do python -m mogul.ingest run all; sleep 86400; done"]
+    command:
+      - sh
+      - -c
+      - >-
+        sleep 20; while true; do
+        python -m mogul.ingest run all;
+        if [ -n "$$MOGUL_RENTCAST_API_KEY" ]; then python -m mogul.ingest listings rentcast; fi;
+        sleep 86400; done
 
   web:
     build:

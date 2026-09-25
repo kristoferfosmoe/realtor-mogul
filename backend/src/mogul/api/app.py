@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from mogul.api.routes import analysis, deals, markets, portfolio
+from mogul.api.routes import analysis, deals, markets, portfolio, screener
 from mogul.config import get_settings
 
 
@@ -17,6 +17,7 @@ def create_app() -> FastAPI:
     app.include_router(deals.router)
     app.include_router(markets.router)
     app.include_router(portfolio.router)
+    app.include_router(screener.router)
 
     @app.get("/health", tags=["meta"])
     def health() -> dict[str, str]:

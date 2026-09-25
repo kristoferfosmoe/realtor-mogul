@@ -42,6 +42,18 @@ export type Category = Schemas["CategoryOut"];
 export type ImportResult = Schemas["ImportOut"];
 export type ValuationIn = Schemas["ValuationIn"];
 
+export type BuyBox = Schemas["BuyBoxOut"];
+export type BuyBoxIn = Schemas["BuyBoxIn"];
+export type Criteria = Schemas["Criteria"];
+export type Assumptions = Schemas["Assumptions"];
+export type Recommendations = Schemas["RecommendationsOut"];
+export type Recommendation = Schemas["RecommendationOut"];
+export type ListingOut = Schemas["ListingOut"];
+export type ListingDetail = Schemas["ListingDetail"];
+export type Evaluation = Schemas["Evaluation"];
+export type RentEstimate = Schemas["RentEstimate"];
+export type ListingSources = Schemas["SourceStatus"];
+
 export class ApiError extends Error {}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -141,4 +153,28 @@ export const api = {
     }),
   deleteValuation: (id: number) =>
     request<void>(`/portfolio/valuations/${id}`, { method: "DELETE" }),
+
+  buyBoxes: () => request<BuyBox[]>("/buy-boxes"),
+  createBuyBox: (body: BuyBoxIn) =>
+    request<BuyBox>("/buy-boxes", { method: "POST", body: json(body) }),
+  updateBuyBox: (id: number, body: BuyBoxIn) =>
+    request<BuyBox>(`/buy-boxes/${id}`, { method: "PUT", body: json(body) }),
+  deleteBuyBox: (id: number) => request<void>(`/buy-boxes/${id}`, { method: "DELETE" }),
+  recommendations: (id: number) => request<Recommendations>(`/buy-boxes/${id}/recommendations`),
+  markSeen: (id: number) => request<void>(`/buy-boxes/${id}/seen`, { method: "POST" }),
+  alerts: () => request<{ total_new: number; by_box: Record<string, number> }>("/screener/alerts"),
+  listing: (id: number, buyBoxId: number) =>
+    request<ListingDetail>(`/listings/${id}?buy_box_id=${buyBoxId}`),
+  patchListing: (id: number, body: { rent_override?: number | null; units?: number }) =>
+    request<ListingOut>(`/listings/${id}`, { method: "PATCH", body: json(body) }),
+  listingToWatchlist: (id: number, buyBoxId: number) =>
+    request<{ deal_id: number }>(`/listings/${id}/watchlist?buy_box_id=${buyBoxId}`, {
+      method: "POST",
+    }),
+  importListings: (csv: string) =>
+    request<{ source: string; new: number; updated: number; price_changes: number }>(
+      "/listings/import",
+      { method: "POST", body: json({ csv }) },
+    ),
+  listingSources: () => request<ListingSources>("/listings/sources"),
 };

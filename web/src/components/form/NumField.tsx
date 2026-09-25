@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 
-export type FieldKind = "usd" | "pct" | "int";
+export type FieldKind = "usd" | "pct" | "int" | "num";
 
 interface Props {
   label: string;
@@ -63,6 +63,7 @@ export function NumField({ label, value, onChange, kind, optional, placeholder, 
         />
         {kind === "pct" && <span className="affix post">%</span>}
         {kind === "int" && suffix && <span className="affix post">{suffix}</span>}
+        {kind === "num" && suffix !== "yr" && suffix && <span className="affix post">{suffix}</span>}
       </div>
     </div>
   );

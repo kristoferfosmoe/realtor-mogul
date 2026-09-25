@@ -30,6 +30,8 @@ def main(argv: list[str] | None = None) -> int:
     reparse = sub.add_parser("reparse", help="re-store an archived raw download")
     reparse.add_argument("source", choices=list(SOURCES))
     reparse.add_argument("folder", type=Path)
+    listings = sub.add_parser("listings", help="fetch for-sale listings")
+    listings.add_argument("source", choices=["rentcast", "demo"])
     sub.add_parser("status", help="show recent ingestion runs")
     args = parser.parse_args(argv)
 
@@ -52,6 +54,29 @@ def main(argv: list[str] | None = None) -> int:
             purge_source(session, "demo")
             result = run_source(session, DemoSource(), httpx.Client(), Path(settings.raw_data_dir))
             print(_describe(result))
+            return 0 if result.status == "ok" else 1
+        if args.cmd == "listings":
+            from mogul.listings.sources import DemoListingSource, ListingSource, RentCastSource
+            from mogul.listings.store import run_listing_source
+
+            try:
+                src: ListingSource = (
+                    DemoListingSource()
+                    if args.source == "demo"
+                    else RentCastSource(settings.rentcast_api_key, settings.listing_areas)
+                )
+            except ValueError as e:
+                print(f"error: {e}", file=sys.stderr)
+                return 2
+            with httpx.Client(
+                timeout=120, follow_redirects=True, headers={"User-Agent": USER_AGENT}
+            ) as client:
+                result = run_listing_source(session, src, client, Path(settings.raw_data_dir))
+            print(
+                _describe(result)
+                .replace("series", "listings")
+                .replace("observations", "price changes")
+            )
             return 0 if result.status == "ok" else 1
         if args.cmd == "reparse":
             source = SOURCES[args.source](settings)

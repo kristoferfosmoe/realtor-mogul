@@ -1135,6 +1135,475 @@
         }
       }
     },
+    "/buy-boxes": {
+      "get": {
+        "tags": [
+          "screener"
+        ],
+        "summary": "List Boxes",
+        "operationId": "list_boxes_buy_boxes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BuyBoxOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Boxes Buy Boxes Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "screener"
+        ],
+        "summary": "Create Box",
+        "operationId": "create_box_buy_boxes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuyBoxIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuyBoxOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/buy-boxes/{box_id}": {
+      "put": {
+        "tags": [
+          "screener"
+        ],
+        "summary": "Update Box",
+        "operationId": "update_box_buy_boxes__box_id__put",
+        "parameters": [
+          {
+            "name": "box_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Box Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuyBoxIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuyBoxOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "screener"
+        ],
+        "summary": "Delete Box",
+        "operationId": "delete_box_buy_boxes__box_id__delete",
+        "parameters": [
+          {
+            "name": "box_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Box Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/buy-boxes/{box_id}/recommendations": {
+      "get": {
+        "tags": [
+          "screener"
+        ],
+        "summary": "Recommendations",
+        "operationId": "recommendations_buy_boxes__box_id__recommendations_get",
+        "parameters": [
+          {
+            "name": "box_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Box Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/buy-boxes/{box_id}/seen": {
+      "post": {
+        "tags": [
+          "screener"
+        ],
+        "summary": "Mark Seen",
+        "operationId": "mark_seen_buy_boxes__box_id__seen_post",
+        "parameters": [
+          {
+            "name": "box_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Box Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/screener/alerts": {
+      "get": {
+        "tags": [
+          "screener"
+        ],
+        "summary": "Alerts",
+        "description": "New BUY-or-better matches per buy box since each was last viewed.",
+        "operationId": "alerts_screener_alerts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Alerts"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings/sources": {
+      "get": {
+        "tags": [
+          "screener"
+        ],
+        "summary": "Listing Sources",
+        "operationId": "listing_sources_listings_sources_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings/import": {
+      "post": {
+        "tags": [
+          "screener"
+        ],
+        "summary": "Import Listings",
+        "description": "Import a listings CSV (e.g. a Redfin \"Download All\" export of your search).",
+        "operationId": "import_listings_listings_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListingImportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListingImportOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings/{listing_id}": {
+      "get": {
+        "tags": [
+          "screener"
+        ],
+        "summary": "Listing Detail",
+        "operationId": "listing_detail_listings__listing_id__get",
+        "parameters": [
+          {
+            "name": "listing_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Listing Id"
+            }
+          },
+          {
+            "name": "buy_box_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Buy Box Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListingDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "screener"
+        ],
+        "summary": "Patch Listing",
+        "description": "Override the rent estimate or the unit count. Send rent_override=null to clear.",
+        "operationId": "patch_listing_listings__listing_id__patch",
+        "parameters": [
+          {
+            "name": "listing_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Listing Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListingPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListingOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings/{listing_id}/watchlist": {
+      "post": {
+        "tags": [
+          "screener"
+        ],
+        "summary": "Add To Watchlist",
+        "description": "Save the listing, underwritten with the buy box's assumptions, as a watchlist deal.",
+        "operationId": "add_to_watchlist_listings__listing_id__watchlist_post",
+        "parameters": [
+          {
+            "name": "listing_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Listing Id"
+            }
+          },
+          {
+            "name": "buy_box_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Buy Box Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "title": "Response Add To Watchlist Listings  Listing Id  Watchlist Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -1163,6 +1632,27 @@
   },
   "components": {
     "schemas": {
+      "Alerts": {
+        "properties": {
+          "total_new": {
+            "type": "integer",
+            "title": "Total New"
+          },
+          "by_box": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Box"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_new",
+          "by_box"
+        ],
+        "title": "Alerts"
+      },
       "Analysis": {
         "properties": {
           "metrics": {
@@ -1206,6 +1696,218 @@
         ],
         "title": "Analysis"
       },
+      "Assumptions": {
+        "properties": {
+          "down_payment_pct": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Down Payment Pct",
+            "default": 0.25
+          },
+          "interest_rate": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 0.5,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interest Rate",
+            "description": "None = current 30Y average plus rate_spread"
+          },
+          "rate_spread": {
+            "type": "number",
+            "maximum": 0.05,
+            "minimum": 0.0,
+            "title": "Rate Spread",
+            "description": "Investor-loan premium",
+            "default": 0.0075
+          },
+          "amortization_years": {
+            "type": "integer",
+            "maximum": 40.0,
+            "minimum": 1.0,
+            "title": "Amortization Years",
+            "default": 30
+          },
+          "closing_costs_pct": {
+            "type": "number",
+            "maximum": 0.25,
+            "minimum": 0.0,
+            "title": "Closing Costs Pct",
+            "default": 0.03
+          },
+          "rehab_pct": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Rehab Pct",
+            "description": "Make-ready budget, % of price",
+            "default": 0.02
+          },
+          "vacancy_rate": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Vacancy Rate",
+            "default": 0.06
+          },
+          "management_pct": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Management Pct",
+            "default": 0.08
+          },
+          "maintenance_pct": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Maintenance Pct",
+            "default": 0.06
+          },
+          "capex_reserve_pct": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Capex Reserve Pct",
+            "default": 0.06
+          },
+          "property_tax_rate": {
+            "type": "number",
+            "maximum": 0.1,
+            "minimum": 0.0,
+            "title": "Property Tax Rate",
+            "description": "Annual, % of price",
+            "default": 0.011
+          },
+          "insurance_rate": {
+            "type": "number",
+            "maximum": 0.1,
+            "minimum": 0.0,
+            "title": "Insurance Rate",
+            "description": "Annual, % of price",
+            "default": 0.005
+          },
+          "growth": {
+            "type": "string",
+            "enum": [
+              "market",
+              "fixed"
+            ],
+            "title": "Growth",
+            "default": "market"
+          },
+          "rent_growth": {
+            "type": "number",
+            "maximum": 0.2,
+            "minimum": -0.2,
+            "title": "Rent Growth",
+            "default": 0.025
+          },
+          "appreciation": {
+            "type": "number",
+            "maximum": 0.2,
+            "minimum": -0.2,
+            "title": "Appreciation",
+            "default": 0.03
+          },
+          "growth_floor": {
+            "type": "number",
+            "maximum": 0.2,
+            "minimum": -0.2,
+            "title": "Growth Floor",
+            "default": 0.0
+          },
+          "growth_cap": {
+            "type": "number",
+            "maximum": 0.3,
+            "minimum": -0.2,
+            "title": "Growth Cap",
+            "default": 0.03
+          },
+          "hold_years": {
+            "type": "integer",
+            "maximum": 40.0,
+            "minimum": 1.0,
+            "title": "Hold Years",
+            "default": 7
+          },
+          "selling_costs_pct": {
+            "type": "number",
+            "maximum": 0.25,
+            "minimum": 0.0,
+            "title": "Selling Costs Pct",
+            "default": 0.06
+          }
+        },
+        "type": "object",
+        "title": "Assumptions"
+      },
+      "BuyBoxIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "criteria": {
+            "$ref": "#/components/schemas/Criteria"
+          },
+          "assumptions": {
+            "$ref": "#/components/schemas/Assumptions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "BuyBoxIn"
+      },
+      "BuyBoxOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "criteria": {
+            "$ref": "#/components/schemas/Criteria"
+          },
+          "assumptions": {
+            "$ref": "#/components/schemas/Assumptions"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "last_viewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Viewed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "id",
+          "last_viewed_at"
+        ],
+        "title": "BuyBoxOut"
+      },
       "CategoryOut": {
         "properties": {
           "id": {
@@ -1228,6 +1930,164 @@
           "group"
         ],
         "title": "CategoryOut"
+      },
+      "Check": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "target": {
+            "type": "number",
+            "title": "Target"
+          },
+          "passed": {
+            "type": "boolean",
+            "title": "Passed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "value",
+          "target",
+          "passed"
+        ],
+        "title": "Check"
+      },
+      "Criteria": {
+        "properties": {
+          "market_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Market Ids",
+            "description": "Empty = any market"
+          },
+          "property_types": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "single_family",
+                "multi_2_4",
+                "condo",
+                "multifamily",
+                "commercial",
+                "land"
+              ]
+            },
+            "type": "array",
+            "title": "Property Types"
+          },
+          "min_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Price"
+          },
+          "max_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Price",
+            "default": 500000
+          },
+          "min_beds": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Beds"
+          },
+          "max_days_on_market": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Days On Market"
+          },
+          "min_year_built": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Year Built"
+          },
+          "min_levered_irr": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": -1.0,
+            "title": "Min Levered Irr",
+            "default": 0.12
+          },
+          "min_cash_on_cash": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": -1.0,
+            "title": "Min Cash On Cash",
+            "default": 0.06
+          },
+          "min_dscr": {
+            "type": "number",
+            "maximum": 5.0,
+            "minimum": 0.0,
+            "title": "Min Dscr",
+            "default": 1.2
+          },
+          "min_cap_rate": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Cap Rate"
+          }
+        },
+        "type": "object",
+        "title": "Criteria"
       },
       "Deal": {
         "properties": {
@@ -1505,6 +2365,74 @@
           "metrics"
         ],
         "title": "DealOut"
+      },
+      "Evaluation": {
+        "properties": {
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "signal": {
+            "type": "string",
+            "enum": [
+              "STRONG BUY",
+              "BUY",
+              "WATCH",
+              "PASS"
+            ],
+            "title": "Signal"
+          },
+          "components": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Components"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/Check"
+            },
+            "type": "array",
+            "title": "Checks"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/Reason"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/Metrics"
+          },
+          "stress_irr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stress Irr"
+          },
+          "deal": {
+            "$ref": "#/components/schemas/Deal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "score",
+          "signal",
+          "components",
+          "checks",
+          "reasons",
+          "metrics",
+          "stress_irr",
+          "deal"
+        ],
+        "title": "Evaluation"
       },
       "Exit": {
         "properties": {
@@ -1889,6 +2817,395 @@
           "active"
         ],
         "title": "LeaseOut"
+      },
+      "ListingDetail": {
+        "properties": {
+          "listing": {
+            "$ref": "#/components/schemas/ListingOut"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/ListingEventOut"
+            },
+            "type": "array",
+            "title": "Events"
+          },
+          "rent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RentEstimate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evaluation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Evaluation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "filtered_because": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Filtered Because"
+          }
+        },
+        "type": "object",
+        "required": [
+          "listing",
+          "events",
+          "rent",
+          "evaluation",
+          "filtered_because"
+        ],
+        "title": "ListingDetail"
+      },
+      "ListingEventOut": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "event": {
+            "type": "string",
+            "title": "Event"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "event",
+          "price"
+        ],
+        "title": "ListingEventOut"
+      },
+      "ListingImportIn": {
+        "properties": {
+          "csv": {
+            "type": "string",
+            "maxLength": 20000000,
+            "minLength": 1,
+            "title": "Csv"
+          }
+        },
+        "type": "object",
+        "required": [
+          "csv"
+        ],
+        "title": "ListingImportIn"
+      },
+      "ListingImportOut": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "new": {
+            "type": "integer",
+            "title": "New"
+          },
+          "updated": {
+            "type": "integer",
+            "title": "Updated"
+          },
+          "price_changes": {
+            "type": "integer",
+            "title": "Price Changes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "new",
+          "updated",
+          "price_changes"
+        ],
+        "title": "ListingImportOut"
+      },
+      "ListingOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
+          "zip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zip"
+          },
+          "market_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Id"
+          },
+          "market_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Name"
+          },
+          "property_type": {
+            "type": "string",
+            "title": "Property Type"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "units_inferred": {
+            "type": "boolean",
+            "title": "Units Inferred"
+          },
+          "beds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Beds"
+          },
+          "baths": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baths"
+          },
+          "sqft": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sqft"
+          },
+          "year_built": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year Built"
+          },
+          "hoa_monthly": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hoa Monthly"
+          },
+          "price": {
+            "type": "number",
+            "title": "Price"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "days_on_market": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days On Market"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "stated_rent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stated Rent"
+          },
+          "rent_override": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rent Override"
+          },
+          "price_change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Change"
+          },
+          "first_seen": {
+            "type": "string",
+            "format": "date-time",
+            "title": "First Seen"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "address",
+          "city",
+          "state",
+          "zip",
+          "market_id",
+          "market_name",
+          "property_type",
+          "units",
+          "units_inferred",
+          "beds",
+          "baths",
+          "sqft",
+          "year_built",
+          "hoa_monthly",
+          "price",
+          "status",
+          "days_on_market",
+          "url",
+          "stated_rent",
+          "rent_override",
+          "price_change",
+          "first_seen"
+        ],
+        "title": "ListingOut"
+      },
+      "ListingPatch": {
+        "properties": {
+          "rent_override": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rent Override"
+          },
+          "units": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Units"
+          }
+        },
+        "type": "object",
+        "title": "ListingPatch"
       },
       "LoanIn": {
         "properties": {
@@ -3118,6 +4435,116 @@
         ],
         "title": "PropertyOut"
       },
+      "Reason": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "tone": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down",
+              "flat"
+            ],
+            "title": "Tone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "tone"
+        ],
+        "title": "Reason"
+      },
+      "RecommendationOut": {
+        "properties": {
+          "listing": {
+            "$ref": "#/components/schemas/ListingOut"
+          },
+          "rent": {
+            "$ref": "#/components/schemas/RentEstimate"
+          },
+          "evaluation": {
+            "$ref": "#/components/schemas/Evaluation"
+          },
+          "is_new": {
+            "type": "boolean",
+            "title": "Is New"
+          }
+        },
+        "type": "object",
+        "required": [
+          "listing",
+          "rent",
+          "evaluation",
+          "is_new"
+        ],
+        "title": "RecommendationOut"
+      },
+      "RecommendationsOut": {
+        "properties": {
+          "buy_box": {
+            "$ref": "#/components/schemas/BuyBoxOut"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/Summary"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/RecommendationOut"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "buy_box",
+          "summary",
+          "rows"
+        ],
+        "title": "RecommendationsOut"
+      },
+      "RentEstimate": {
+        "properties": {
+          "monthly": {
+            "type": "number",
+            "title": "Monthly"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "override",
+              "stated",
+              "model"
+            ],
+            "title": "Source"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "title": "Confidence"
+          },
+          "basis": {
+            "type": "string",
+            "title": "Basis"
+          }
+        },
+        "type": "object",
+        "required": [
+          "monthly",
+          "source",
+          "confidence",
+          "basis"
+        ],
+        "title": "RentEstimate"
+      },
       "RunOut": {
         "properties": {
           "id": {
@@ -3457,6 +4884,41 @@
         ],
         "title": "Slice"
       },
+      "SourceStatus": {
+        "properties": {
+          "rentcast_configured": {
+            "type": "boolean",
+            "title": "Rentcast Configured"
+          },
+          "listing_areas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Listing Areas"
+          },
+          "active_listings": {
+            "type": "integer",
+            "title": "Active Listings"
+          },
+          "runs": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Runs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rentcast_configured",
+          "listing_areas",
+          "active_listings",
+          "runs"
+        ],
+        "title": "SourceStatus"
+      },
       "SourcesOut": {
         "properties": {
           "runs": {
@@ -3480,6 +4942,59 @@
           "attributions"
         ],
         "title": "SourcesOut"
+      },
+      "Summary": {
+        "properties": {
+          "scanned": {
+            "type": "integer",
+            "title": "Scanned"
+          },
+          "filtered_out": {
+            "type": "integer",
+            "title": "Filtered Out"
+          },
+          "evaluated": {
+            "type": "integer",
+            "title": "Evaluated"
+          },
+          "strong_buy": {
+            "type": "integer",
+            "title": "Strong Buy"
+          },
+          "buy": {
+            "type": "integer",
+            "title": "Buy"
+          },
+          "watch": {
+            "type": "integer",
+            "title": "Watch"
+          },
+          "new_matches": {
+            "type": "integer",
+            "title": "New Matches"
+          },
+          "interest_rate": {
+            "type": "number",
+            "title": "Interest Rate"
+          },
+          "demo": {
+            "type": "boolean",
+            "title": "Demo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scanned",
+          "filtered_out",
+          "evaluated",
+          "strong_buy",
+          "buy",
+          "watch",
+          "new_matches",
+          "interest_rate",
+          "demo"
+        ],
+        "title": "Summary"
       },
       "Totals": {
         "properties": {

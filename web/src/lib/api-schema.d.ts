@@ -381,6 +381,174 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/buy-boxes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Boxes */
+        get: operations["list_boxes_buy_boxes_get"];
+        put?: never;
+        /** Create Box */
+        post: operations["create_box_buy_boxes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/buy-boxes/{box_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Box */
+        put: operations["update_box_buy_boxes__box_id__put"];
+        post?: never;
+        /** Delete Box */
+        delete: operations["delete_box_buy_boxes__box_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/buy-boxes/{box_id}/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recommendations */
+        get: operations["recommendations_buy_boxes__box_id__recommendations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/buy-boxes/{box_id}/seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Seen */
+        post: operations["mark_seen_buy_boxes__box_id__seen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/screener/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Alerts
+         * @description New BUY-or-better matches per buy box since each was last viewed.
+         */
+        get: operations["alerts_screener_alerts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/listings/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing Sources */
+        get: operations["listing_sources_listings_sources_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/listings/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Listings
+         * @description Import a listings CSV (e.g. a Redfin "Download All" export of your search).
+         */
+        post: operations["import_listings_listings_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/listings/{listing_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing Detail */
+        get: operations["listing_detail_listings__listing_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Patch Listing
+         * @description Override the rent estimate or the unit count. Send rent_override=null to clear.
+         */
+        patch: operations["patch_listing_listings__listing_id__patch"];
+        trace?: never;
+    };
+    "/listings/{listing_id}/watchlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add To Watchlist
+         * @description Save the listing, underwritten with the buy box's assumptions, as a watchlist deal.
+         */
+        post: operations["add_to_watchlist_listings__listing_id__watchlist_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -402,6 +570,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Alerts */
+        Alerts: {
+            /** Total New */
+            total_new: number;
+            /** By Box */
+            by_box: {
+                [key: string]: number;
+            };
+        };
         /** Analysis */
         Analysis: {
             metrics: components["schemas"]["Metrics"];
@@ -419,6 +596,127 @@ export interface components {
              */
             unlevered_cash_flows: number[];
         };
+        /** Assumptions */
+        Assumptions: {
+            /**
+             * Down Payment Pct
+             * @default 0.25
+             */
+            down_payment_pct: number;
+            /**
+             * Interest Rate
+             * @description None = current 30Y average plus rate_spread
+             */
+            interest_rate?: number | null;
+            /**
+             * Rate Spread
+             * @description Investor-loan premium
+             * @default 0.0075
+             */
+            rate_spread: number;
+            /**
+             * Amortization Years
+             * @default 30
+             */
+            amortization_years: number;
+            /**
+             * Closing Costs Pct
+             * @default 0.03
+             */
+            closing_costs_pct: number;
+            /**
+             * Rehab Pct
+             * @description Make-ready budget, % of price
+             * @default 0.02
+             */
+            rehab_pct: number;
+            /**
+             * Vacancy Rate
+             * @default 0.06
+             */
+            vacancy_rate: number;
+            /**
+             * Management Pct
+             * @default 0.08
+             */
+            management_pct: number;
+            /**
+             * Maintenance Pct
+             * @default 0.06
+             */
+            maintenance_pct: number;
+            /**
+             * Capex Reserve Pct
+             * @default 0.06
+             */
+            capex_reserve_pct: number;
+            /**
+             * Property Tax Rate
+             * @description Annual, % of price
+             * @default 0.011
+             */
+            property_tax_rate: number;
+            /**
+             * Insurance Rate
+             * @description Annual, % of price
+             * @default 0.005
+             */
+            insurance_rate: number;
+            /**
+             * Growth
+             * @default market
+             * @enum {string}
+             */
+            growth: "market" | "fixed";
+            /**
+             * Rent Growth
+             * @default 0.025
+             */
+            rent_growth: number;
+            /**
+             * Appreciation
+             * @default 0.03
+             */
+            appreciation: number;
+            /**
+             * Growth Floor
+             * @default 0
+             */
+            growth_floor: number;
+            /**
+             * Growth Cap
+             * @default 0.03
+             */
+            growth_cap: number;
+            /**
+             * Hold Years
+             * @default 7
+             */
+            hold_years: number;
+            /**
+             * Selling Costs Pct
+             * @default 0.06
+             */
+            selling_costs_pct: number;
+        };
+        /** BuyBoxIn */
+        BuyBoxIn: {
+            /** Name */
+            name: string;
+            criteria?: components["schemas"]["Criteria"];
+            assumptions?: components["schemas"]["Assumptions"];
+        };
+        /** BuyBoxOut */
+        BuyBoxOut: {
+            /** Name */
+            name: string;
+            criteria?: components["schemas"]["Criteria"];
+            assumptions?: components["schemas"]["Assumptions"];
+            /** Id */
+            id: number;
+            /** Last Viewed At */
+            last_viewed_at: string | null;
+        };
         /** CategoryOut */
         CategoryOut: {
             /** Id */
@@ -427,6 +725,57 @@ export interface components {
             label: string;
             /** Group */
             group: string;
+        };
+        /** Check */
+        Check: {
+            /** Name */
+            name: string;
+            /** Value */
+            value: number | null;
+            /** Target */
+            target: number;
+            /** Passed */
+            passed: boolean;
+        };
+        /** Criteria */
+        Criteria: {
+            /**
+             * Market Ids
+             * @description Empty = any market
+             */
+            market_ids?: number[];
+            /** Property Types */
+            property_types?: ("single_family" | "multi_2_4" | "condo" | "multifamily" | "commercial" | "land")[];
+            /** Min Price */
+            min_price?: number | null;
+            /**
+             * Max Price
+             * @default 500000
+             */
+            max_price: number | null;
+            /** Min Beds */
+            min_beds?: number | null;
+            /** Max Days On Market */
+            max_days_on_market?: number | null;
+            /** Min Year Built */
+            min_year_built?: number | null;
+            /**
+             * Min Levered Irr
+             * @default 0.12
+             */
+            min_levered_irr: number;
+            /**
+             * Min Cash On Cash
+             * @default 0.06
+             */
+            min_cash_on_cash: number;
+            /**
+             * Min Dscr
+             * @default 1.2
+             */
+            min_dscr: number;
+            /** Min Cap Rate */
+            min_cap_rate?: number | null;
         };
         /**
          * Deal
@@ -577,6 +926,28 @@ export interface components {
              */
             updated_at: string;
             metrics: components["schemas"]["Metrics"];
+        };
+        /** Evaluation */
+        Evaluation: {
+            /** Score */
+            score: number;
+            /**
+             * Signal
+             * @enum {string}
+             */
+            signal: "STRONG BUY" | "BUY" | "WATCH" | "PASS";
+            /** Components */
+            components: {
+                [key: string]: number;
+            };
+            /** Checks */
+            checks: components["schemas"]["Check"][];
+            /** Reasons */
+            reasons: components["schemas"]["Reason"][];
+            metrics: components["schemas"]["Metrics"];
+            /** Stress Irr */
+            stress_irr: number | null;
+            deal: components["schemas"]["Deal"];
         };
         /** Exit */
         Exit: {
@@ -729,6 +1100,105 @@ export interface components {
             id: number;
             /** Active */
             active: boolean;
+        };
+        /** ListingDetail */
+        ListingDetail: {
+            listing: components["schemas"]["ListingOut"];
+            /** Events */
+            events: components["schemas"]["ListingEventOut"][];
+            rent: components["schemas"]["RentEstimate"] | null;
+            evaluation: components["schemas"]["Evaluation"] | null;
+            /** Filtered Because */
+            filtered_because: string[];
+        };
+        /** ListingEventOut */
+        ListingEventOut: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Event */
+            event: string;
+            /** Price */
+            price: number | null;
+        };
+        /** ListingImportIn */
+        ListingImportIn: {
+            /** Csv */
+            csv: string;
+        };
+        /** ListingImportOut */
+        ListingImportOut: {
+            /** Source */
+            source: string;
+            /** New */
+            new: number;
+            /** Updated */
+            updated: number;
+            /** Price Changes */
+            price_changes: number;
+        };
+        /** ListingOut */
+        ListingOut: {
+            /** Id */
+            id: number;
+            /** Source */
+            source: string;
+            /** Address */
+            address: string;
+            /** City */
+            city: string | null;
+            /** State */
+            state: string | null;
+            /** Zip */
+            zip: string | null;
+            /** Market Id */
+            market_id: number | null;
+            /** Market Name */
+            market_name: string | null;
+            /** Property Type */
+            property_type: string;
+            /** Units */
+            units: number;
+            /** Units Inferred */
+            units_inferred: boolean;
+            /** Beds */
+            beds: number | null;
+            /** Baths */
+            baths: number | null;
+            /** Sqft */
+            sqft: number | null;
+            /** Year Built */
+            year_built: number | null;
+            /** Hoa Monthly */
+            hoa_monthly: number | null;
+            /** Price */
+            price: number;
+            /** Status */
+            status: string;
+            /** Days On Market */
+            days_on_market: number | null;
+            /** Url */
+            url: string | null;
+            /** Stated Rent */
+            stated_rent: number | null;
+            /** Rent Override */
+            rent_override: number | null;
+            /** Price Change */
+            price_change: number | null;
+            /**
+             * First Seen
+             * Format: date-time
+             */
+            first_seen: string;
+        };
+        /** ListingPatch */
+        ListingPatch: {
+            /** Rent Override */
+            rent_override?: number | null;
+            /** Units */
+            units?: number | null;
         };
         /** LoanIn */
         LoanIn: {
@@ -1128,6 +1598,48 @@ export interface components {
             /** Market Name */
             market_name: string | null;
         };
+        /** Reason */
+        Reason: {
+            /** Text */
+            text: string;
+            /**
+             * Tone
+             * @enum {string}
+             */
+            tone: "up" | "down" | "flat";
+        };
+        /** RecommendationOut */
+        RecommendationOut: {
+            listing: components["schemas"]["ListingOut"];
+            rent: components["schemas"]["RentEstimate"];
+            evaluation: components["schemas"]["Evaluation"];
+            /** Is New */
+            is_new: boolean;
+        };
+        /** RecommendationsOut */
+        RecommendationsOut: {
+            buy_box: components["schemas"]["BuyBoxOut"];
+            summary: components["schemas"]["Summary"];
+            /** Rows */
+            rows: components["schemas"]["RecommendationOut"][];
+        };
+        /** RentEstimate */
+        RentEstimate: {
+            /** Monthly */
+            monthly: number;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "override" | "stated" | "model";
+            /**
+             * Confidence
+             * @enum {string}
+             */
+            confidence: "high" | "medium" | "low";
+            /** Basis */
+            basis: string;
+        };
         /** RunOut */
         RunOut: {
             /** Id */
@@ -1231,6 +1743,19 @@ export interface components {
             /** Share */
             share: number;
         };
+        /** SourceStatus */
+        SourceStatus: {
+            /** Rentcast Configured */
+            rentcast_configured: boolean;
+            /** Listing Areas */
+            listing_areas: string[];
+            /** Active Listings */
+            active_listings: number;
+            /** Runs */
+            runs: {
+                [key: string]: unknown;
+            }[];
+        };
         /** SourcesOut */
         SourcesOut: {
             /** Runs */
@@ -1239,6 +1764,27 @@ export interface components {
             attributions: {
                 [key: string]: string;
             };
+        };
+        /** Summary */
+        Summary: {
+            /** Scanned */
+            scanned: number;
+            /** Filtered Out */
+            filtered_out: number;
+            /** Evaluated */
+            evaluated: number;
+            /** Strong Buy */
+            strong_buy: number;
+            /** Buy */
+            buy: number;
+            /** Watch */
+            watch: number;
+            /** New Matches */
+            new_matches: number;
+            /** Interest Rate */
+            interest_rate: number;
+            /** Demo */
+            demo: boolean;
         };
         /** Totals */
         Totals: {
@@ -2279,6 +2825,359 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_boxes_buy_boxes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyBoxOut"][];
+                };
+            };
+        };
+    };
+    create_box_buy_boxes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BuyBoxIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyBoxOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_box_buy_boxes__box_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                box_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BuyBoxIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyBoxOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_box_buy_boxes__box_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                box_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recommendations_buy_boxes__box_id__recommendations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                box_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecommendationsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_seen_buy_boxes__box_id__seen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                box_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    alerts_screener_alerts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Alerts"];
+                };
+            };
+        };
+    };
+    listing_sources_listings_sources_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceStatus"];
+                };
+            };
+        };
+    };
+    import_listings_listings_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ListingImportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListingImportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listing_detail_listings__listing_id__get: {
+        parameters: {
+            query: {
+                buy_box_id: number;
+            };
+            header?: never;
+            path: {
+                listing_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListingDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_listing_listings__listing_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listing_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ListingPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListingOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_to_watchlist_listings__listing_id__watchlist_post: {
+        parameters: {
+            query: {
+                buy_box_id: number;
+            };
+            header?: never;
+            path: {
+                listing_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
+                };
             };
             /** @description Validation Error */
             422: {

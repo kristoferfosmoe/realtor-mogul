@@ -167,7 +167,12 @@ def indicators(db: DbSession) -> list[Indicator]:
 
 @router.get("/sources")
 def sources(db: DbSession) -> SourcesOut:
-    runs = db.scalars(select(IngestionRun).order_by(IngestionRun.id.desc()).limit(20))
+    runs = db.scalars(
+        select(IngestionRun)
+        .where(IngestionRun.source.in_(list(ATTRIBUTIONS)))
+        .order_by(IngestionRun.id.desc())
+        .limit(20)
+    )
     return SourcesOut(
         runs=[
             RunOut(

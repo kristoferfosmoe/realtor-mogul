@@ -231,3 +231,87 @@ class Valuation(Base):
     note: Mapped[str | None] = mapped_column(String(300))
 
     property: Mapped[Property] = relationship(back_populates="valuations")
+
+
+# ---------------------------------------------------------------------------
+# Listings (for sale) and the buy boxes that screen them.
+# ---------------------------------------------------------------------------
+
+
+class Listing(Base):
+    """A property for sale, from an API, a CSV export, or demo data.
+
+    (source, source_id) identifies it within a source; `address_key` is a normalized
+    address used to spot the same property coming from different sources.
+    """
+
+    __tablename__ = "listing"
+    __table_args__ = (
+        UniqueConstraint("source", "source_id"),
+        Index("ix_listing_address_key", "address_key"),
+        Index("ix_listing_status", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source: Mapped[str] = mapped_column(String(40))
+    source_id: Mapped[str] = mapped_column(String(200))
+    address: Mapped[str] = mapped_column(String(300))
+    city: Mapped[str | None] = mapped_column(String(120))
+    state: Mapped[str | None] = mapped_column(String(2))
+    zip: Mapped[str | None] = mapped_column(String(10))
+    address_key: Mapped[str] = mapped_column(String(300))
+    latitude: Mapped[float | None] = mapped_column(Float)
+    longitude: Mapped[float | None] = mapped_column(Float)
+    market_id: Mapped[int | None] = mapped_column(ForeignKey("geography.id", ondelete="SET NULL"))
+    property_type: Mapped[str] = mapped_column(String(30))
+    units: Mapped[int] = mapped_column(Integer, default=1)
+    units_inferred: Mapped[bool] = mapped_column(default=False)
+    beds: Mapped[float | None] = mapped_column(Float)
+    baths: Mapped[float | None] = mapped_column(Float)
+    sqft: Mapped[int | None] = mapped_column(Integer)
+    year_built: Mapped[int | None] = mapped_column(Integer)
+    hoa_monthly: Mapped[float | None] = mapped_column(Float)
+    price: Mapped[float] = mapped_column(Float)
+    status: Mapped[str] = mapped_column(
+        String(20), default="active"
+    )  # active|pending|sold|off_market
+    listed_date: Mapped[date | None] = mapped_column(Date)
+    days_on_market: Mapped[int | None] = mapped_column(Integer)
+    url: Mapped[str | None] = mapped_column(String(500))
+    stated_rent: Mapped[float | None] = mapped_column(Float)  # monthly, if the listing says
+    rent_override: Mapped[float | None] = mapped_column(Float)  # monthly, set by the user
+    first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    market: Mapped[Geography | None] = relationship()
+    events: Mapped[list[ListingEvent]] = relationship(
+        back_populates="listing", cascade="all, delete-orphan", order_by="ListingEvent.date"
+    )
+
+
+class ListingEvent(Base):
+    """Price and status history: listed, price_change, pending, sold, delisted."""
+
+    __tablename__ = "listing_event"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    listing_id: Mapped[int] = mapped_column(ForeignKey("listing.id", ondelete="CASCADE"))
+    date: Mapped[date] = mapped_column(Date)
+    event: Mapped[str] = mapped_column(String(20))
+    price: Mapped[float | None] = mapped_column(Float)
+
+    listing: Mapped[Listing] = relationship(back_populates="events")
+
+
+class BuyBox(Base):
+    """Saved screening criteria plus the underwriting assumptions applied to listings."""
+
+    __tablename__ = "buy_box"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    criteria: Mapped[dict[str, Any]] = mapped_column(JSON)
+    assumptions: Mapped[dict[str, Any]] = mapped_column(JSON)
+    # Listings first seen after this are flagged NEW.
+    last_viewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
