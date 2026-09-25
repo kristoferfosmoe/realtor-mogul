@@ -12,7 +12,7 @@ green or red coloring against target returns.
 |---|---|
 | Users | Single user or small team. Auth is added before any public deployment. |
 | Stack | Python 3.11 + FastAPI + SQLAlchemy/Alembic backend; Next.js (App Router) + TypeScript frontend. |
-| Database | PostgreSQL (SQLite for zero-setup local dev and tests). PostGIS gets added along with geography. |
+| Database | PostgreSQL (SQLite for zero-setup local dev and tests). PostGIS gets added once ZIP/tract shapes are needed. |
 | Data sources | Free/bulk sources first (Zillow ZORI, HUD FMR, Census ACS, FRED), then one paid API for comps and listings. No scraping of sites whose terms forbid it. |
 | Property types | Residential 1–4 units first. Commercial gets its own rent-roll model later. |
 | Returns | Pre-tax. Depreciation and after-tax IRR come later. |
@@ -89,28 +89,52 @@ notebooks all use it.
 - The targets and signal logic live in `web/src/lib/metrics.ts`. The recommendations
   module will replace them.
 
-### Market data (next)
-- `geography` (ZIP, county, MSA, tract; PostGIS shapes).
-- `market_metric(geo_id, date, metric, segment, value, source_id, ingested_at)`: one
-  long time-series table. `segment` holds property type and bedroom count, and `metric`
-  holds values such as median rent, rent index and vacancy.
-- Every raw download is saved to object storage before parsing, so history can be
-  re-parsed and we build our own history for sources that only publish "current" values.
-- Derived series (YoY, 3/5-year compound annual growth, rent-to-price) feed the engine's
-  default growth assumptions.
+### Market data (built)
+Tables:
+- `geography`: the country and metros (MSAs). The name follows Zillow's style
+  ("Austin, TX"), and `external_ids` holds per-source ids (Zillow RegionID today, CBSA later)
+  so one place can be matched across sources.
+- `market_series`: one series per `(source, source_key)`, e.g. Zillow's rent index for
+  Austin, tagged with `metric`, `unit` and `frequency`.
+- `market_observation(series_id, date, value)`: the history. Re-running an ingest
+  updates values in place rather than adding duplicates, so revised numbers overwrite old ones.
+- `ingestion_run`: every attempt, with status, counts, the raw-archive path and any error.
 
-### Ingestion workers (next)
-Each source is an adapter: `fetch → store raw → parse → normalize → upsert`, with
-scheduled runs, retries, rate limits and an `ingestion_run` log table. A Postgres-backed
-job queue avoids adding Redis early on. Playwright is available for sources that
-need a browser and allow automated access.
+Metrics and units: `rent_index` (USD/mo, ZORI), `home_value` (USD, ZHVI),
+`mortgage_rate_30y` and `rental_vacancy` (decimal rates, like the engine), and `cpi_rent`
+(an index, shown as YoY).
 
-| Need | Sources |
-|---|---|
-| Rent trends | Zillow ZORI CSVs, Apartment List, HUD FMR API, Census ACS, FRED |
-| Rent comps | RentCast API |
-| Residential listings | RentCast / ATTOM, or MLS via RESO Web API (needs broker/IDX agreement) |
-| Commercial listings | Paid (Crexi, CoStar, Reonomy) or manual/CSV import. LoopNet and Crexi forbid scraping. |
+`mogul.markets.analytics` holds pure time-series math: YoY, 3/5-year compound annual
+growth (month-end aware), latest-on-or-before lookups for weekly and quarterly series,
+and gross yield (rent × 12 ÷ home value). When a place has several series for the same
+metric, a real source always wins over demo data.
+
+API: `GET /markets` (screener rows with stats and a 24-month sparkline),
+`GET /markets/{id}` (full history), `GET /markets/indicators` (national macro for the
+ticker tape), `GET /markets/sources` (run log and attributions).
+
+UI: the **Markets** page has a market-watch list (sort by size, rent YoY or yield), a
+quote header, a rent vs. home-value chart with 1Y–MAX ranges, a year-by-year table, a
+US macro panel and data-source health. The analyzer can apply a market's 5-year compound
+growth rates to a deal (or start one with `/?market=<id>`) and use the current 30-year
+mortgage rate.
+
+### Ingestion (built)
+`python -m mogul.ingest run {zillow|fred|all}` (or `make ingest`). Each source is an
+adapter with `fetch()` (download) and `parse()` (to `ParsedSeries`). The pipeline archives
+the raw files under `MOGUL_RAW_DATA_DIR/<source>/<timestamp>/` before parsing, upserts,
+and logs the run. A failed fetch is recorded on the run and leaves existing data untouched.
+`reparse <source> <folder>` rebuilds from an archive. In Compose, an `ingest` service runs
+it daily.
+
+| Source | Series | Notes |
+|---|---|---|
+| Zillow Research CSVs | ZORI rent, ZHVI home value; US + top `MOGUL_ZILLOW_MAX_METROS` metros | Free with attribution |
+| FRED CSV export (no key) | 30Y mortgage (PMMS), CPI rent of primary residence, rental vacancy | Public; attribution shown |
+| `demo` | Synthetic versions of the above | Offline only, labeled DEMO everywhere, deleted by any real run |
+
+Next sources: HUD Fair Market Rents (API token), Census ACS median rent by ZIP/tract,
+RentCast for comps. Listings and commercial sources are covered below.
 
 ### Listings, portfolio, recommendations (later)
 - **Listings:** for-sale listings plus their status and price history, duplicates merged
@@ -126,7 +150,7 @@ need a browser and allow automated access.
 
 1. ✅ Foundation: monorepo, CI, Docker Compose, migrations.
 2. ✅ Underwriting engine, deal analyzer, watchlist.
-3. Market rent ingestion + Markets page (rent-trend charts, growth defaults).
+3. ✅ Market rent ingestion + Markets page (rent-trend charts, growth defaults).
 4. Portfolio tracking (ledger, actual vs. projected).
 5. Listings ingestion, rent estimation, screener and recommendations, alerts.
 6. Commercial underwriting (rent roll, NNN, TI/LC), Monte Carlo, after-tax returns, auth.

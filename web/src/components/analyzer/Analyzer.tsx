@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useWatchlist } from "@/components/WatchlistContext";
 import { type Analysis, api, type Deal, type Metrics } from "@/lib/api";
+import { growthDefaults } from "@/lib/markets";
 
 import { CashFlowChart } from "./CashFlowChart";
 import { type DealMeta, DealTicket } from "./DealTicket";
@@ -18,7 +19,13 @@ const BLANK_META: DealMeta = { name: "", address: "", status: "watching" };
 const snapshot = (deal: Deal, meta: DealMeta) => JSON.stringify({ deal, meta });
 
 /** Mounted per deal (keyed by id), so switching deals starts from fresh state. */
-export function Analyzer({ savedId }: { savedId: number | null }) {
+export function Analyzer({
+  savedId,
+  marketId,
+}: {
+  savedId: number | null;
+  marketId: number | null;
+}) {
   const router = useRouter();
   const { refresh } = useWatchlist();
 
@@ -39,7 +46,13 @@ export function Analyzer({ savedId }: { savedId: number | null }) {
           const m = { name: d.name, address: d.address ?? "", status: d.status };
           return { inputs: d.inputs, meta: m, metrics: d.metrics as Metrics | null };
         })
-      : api.template().then((t) => ({ inputs: t, meta: BLANK_META, metrics: null }));
+      : Promise.all([api.template(), marketId != null ? api.market(marketId) : null]).then(
+          ([t, market]) => ({
+            inputs: market ? { ...t, ...growthDefaults(market.summary) } : t,
+            meta: market ? { ...BLANK_META, address: market.summary.geography.name } : BLANK_META,
+            metrics: null,
+          }),
+        );
     load
       .then(({ inputs, meta: m, metrics }) => {
         if (cancelled) return;
@@ -53,7 +66,7 @@ export function Analyzer({ savedId }: { savedId: number | null }) {
     return () => {
       cancelled = true;
     };
-  }, [savedId]);
+  }, [savedId, marketId]);
 
   // Re-run the engine as the ticket changes, like a live quote.
   useEffect(() => {

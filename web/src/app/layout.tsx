@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 
+import { MarketDataProvider } from "@/components/MarketDataContext";
 import { TickerTape } from "@/components/TickerTape";
 import { TopBar } from "@/components/TopBar";
 import { WatchlistProvider } from "@/components/WatchlistContext";
@@ -19,13 +20,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${mono.variable}`}>
       <body>
-        <WatchlistProvider>
-          <div className="shell">
-            <TopBar />
-            <TickerTape />
-            {children}
-          </div>
-        </WatchlistProvider>
+        <MarketDataProvider>
+          <WatchlistProvider>
+            <div className="shell">
+              <TopBar />
+              <TickerTape />
+              {children}
+            </div>
+          </WatchlistProvider>
+        </MarketDataProvider>
       </body>
     </html>
   );

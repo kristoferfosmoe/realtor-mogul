@@ -22,6 +22,16 @@ services:
         condition: service_healthy
     ports: ["8000:8000"]
 
+  # Refreshes market data once a day. Sources publish monthly/weekly, so daily is plenty.
+  ingest:
+    build: ./backend
+    environment:
+      MOGUL_DATABASE_URL: postgresql+psycopg://mogul:mogul@db:5432/mogul
+      MOGUL_RAW_DATA_DIR: /data/raw
+    volumes: [rawdata:/data/raw]
+    depends_on: [api] # api applies migrations on start
+    command: ["sh", "-c", "sleep 20; while true; do python -m mogul.ingest run all; sleep 86400; done"]
+
   web:
     build:
       context: ./web
@@ -32,3 +42,4 @@ services:
 
 volumes:
   pgdata:
+  rawdata:

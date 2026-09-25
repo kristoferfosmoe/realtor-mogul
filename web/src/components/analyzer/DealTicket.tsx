@@ -1,6 +1,11 @@
 "use client";
 
+import { useState } from "react";
+
+import { useMarketData } from "@/components/MarketDataContext";
 import type { Deal, DealStatus, Financing } from "@/lib/api";
+import { pct } from "@/lib/format";
+import { growthDefaults, shortName } from "@/lib/markets";
 
 import { NumField } from "./NumField";
 
@@ -35,6 +40,21 @@ const STATUSES: DealStatus[] = ["watching", "offer", "owned", "passed"];
 /** Left-hand "order ticket": every underwriting assumption for the open deal. */
 export function DealTicket(props: Props) {
   const { deal, onChange, meta, onMetaChange } = props;
+  const { markets, indicators } = useMarketData();
+  const [growthFrom, setGrowthFrom] = useState<string | null>(null);
+  const mortgage = indicators.find((i) => i.metric === "mortgage_rate_30y")?.stats?.latest;
+
+  const applyMarket = (id: string) => {
+    const m = markets.find((x) => String(x.geography.id) === id);
+    if (!m) return;
+    const g = growthDefaults(m);
+    onChange({
+      ...deal,
+      rent_growth: g.rent_growth ?? deal.rent_growth,
+      appreciation: g.appreciation ?? deal.appreciation,
+    });
+    setGrowthFrom(`${shortName(m.geography.name)}${m.demo ? " (demo)" : ""}`);
+  };
   const set = <K extends keyof Deal>(key: K) => (v: Deal[K]) => onChange({ ...deal, [key]: v });
   const req = <K extends keyof Deal>(key: K) => (v: number | null) =>
     onChange({ ...deal, [key]: v ?? 0 });
@@ -119,6 +139,11 @@ export function DealTicket(props: Props) {
           <>
             <NumField label="Down payment" kind="pct" value={deal.financing.down_payment_pct} onChange={setFin("down_payment_pct")} />
             <NumField label="Interest rate" kind="pct" value={deal.financing.interest_rate} onChange={setFin("interest_rate")} />
+            {mortgage != null && Math.abs(mortgage - deal.financing.interest_rate) > 1e-6 && (
+              <button type="button" className="hint-btn" onClick={() => setFin("interest_rate")(mortgage)}>
+                Use current 30Y avg {pct(mortgage)}
+              </button>
+            )}
             <NumField label="Amortization" kind="int" value={deal.financing.amortization_years} onChange={setFin("amortization_years")} />
             <NumField label="Points" kind="pct" value={deal.financing.points_pct} onChange={setFin("points_pct")} />
           </>
@@ -126,6 +151,23 @@ export function DealTicket(props: Props) {
       </Section>
 
       <Section title="Growth & Exit">
+        {markets.length > 0 && (
+          <select
+            className="select"
+            aria-label="Apply market growth"
+            value=""
+            onChange={(e) => applyMarket(e.target.value)}
+          >
+            <option value="">Apply market growth (5Y CAGR)…</option>
+            {markets.map((m) => (
+              <option key={m.geography.id} value={m.geography.id}>
+                {shortName(m.geography.name)} · rent {pct(growthDefaults(m).rent_growth, 1)} · value{" "}
+                {pct(growthDefaults(m).appreciation, 1)}
+              </option>
+            ))}
+          </select>
+        )}
+        {growthFrom && <div className="hint">Growth from {growthFrom}</div>}
         <NumField label="Rent growth / yr" kind="pct" value={deal.rent_growth} onChange={req("rent_growth")} />
         <NumField label="Expense growth / yr" kind="pct" value={deal.expense_growth} onChange={req("expense_growth")} />
         <NumField label="Appreciation / yr" kind="pct" value={deal.appreciation} onChange={req("appreciation")} />

@@ -8,9 +8,10 @@ import { api } from "@/lib/api";
 
 const NAV = [
   { href: "/", label: "ANALYZER" },
+  { href: "/markets", label: "MARKETS" },
   { href: "/watchlist", label: "WATCHLIST" },
 ];
-const COMING = ["MARKETS", "PORTFOLIO", "SCREENER"];
+const COMING = ["PORTFOLIO", "SCREENER"];
 
 export function TopBar() {
   const pathname = usePathname();

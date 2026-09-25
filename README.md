@@ -2,8 +2,9 @@
 
 A real-estate investment terminal. Underwrite rentals the way a trader watches
 tickers: live IRR, ROIC, cash-on-cash and DSCR as you change assumptions,
-sensitivity heatmaps, and a watchlist screener. Market rent trends, listings
-and recommendations are next. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+sensitivity heatmaps, a watchlist screener, and a Markets page tracking rent
+and home-value trends by metro. Listings and recommendations are next.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Layout
 
@@ -12,6 +13,8 @@ backend/   FastAPI app + the pure underwriting engine (Python, uv)
   src/mogul/engine/   pro forma, IRR/XIRR, mortgage math, sensitivity. No I/O.
   src/mogul/api/      HTTP routes
   src/mogul/db/       SQLAlchemy models; migrations live in backend/alembic/
+  src/mogul/ingest/   market-data source adapters + pipeline (python -m mogul.ingest)
+  src/mogul/markets/  time-series analytics (YoY, CAGR, gross yield) and queries
 web/       Next.js terminal UI (TypeScript), proxies /api/* to the backend
 docs/      architecture and decisions
 ```
@@ -24,12 +27,17 @@ Needs [uv](https://docs.astral.sh/uv/) and Node 22.
 make setup   # install deps, create a local SQLite DB
 make api     # http://localhost:8000  (OpenAPI docs at /docs)
 make web     # http://localhost:3000
+make ingest  # pull market data: Zillow rents/home values + FRED indicators
 ```
+
+No network access to Zillow/FRED? `make demo-data` loads a clearly labeled
+synthetic set so the Markets page has something to show; the next real ingest
+replaces it.
 
 Or run the whole stack on Postgres with Docker:
 
 ```sh
-docker compose up --build   # web on :3000, api on :8000, postgres on :5432
+docker compose up --build   # web :3000, api :8000, postgres :5432, daily ingest worker
 ```
 
 ## Develop

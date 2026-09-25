@@ -1,4 +1,4 @@
-.PHONY: setup api web test lint types
+.PHONY: setup api web test lint types ingest demo-data
 
 setup:          ## Install backend and web dependencies, create the local DB
 	cd backend && uv sync && uv run alembic upgrade head
@@ -19,3 +19,9 @@ lint:           ## All static checks
 
 types:          ## Regenerate web API types from the backend's OpenAPI schema
 	cd web && npm run gen:api
+
+ingest:         ## Download Zillow rent/home-value history and FRED indicators
+	cd backend && uv run python -m mogul.ingest run all
+
+demo-data:      ## Load synthetic market data (offline; replaced by the next real ingest)
+	cd backend && uv run python -m mogul.ingest demo

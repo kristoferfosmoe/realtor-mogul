@@ -17,6 +17,14 @@ export type MetricKey = {
   [K in keyof Metrics]: Metrics[K] extends number | null | undefined ? K : never;
 }[keyof Metrics];
 
+export type SeriesStats = Schemas["SeriesStats"];
+export type MarketSummary = Schemas["MarketSummary"];
+export type MarketDetail = Schemas["MarketDetail"];
+export type MarketSeries = Schemas["SeriesOut"];
+export type Indicator = Schemas["Indicator"];
+export type Sources = Schemas["SourcesOut"];
+export type Point = Schemas["Point"];
+
 export class ApiError extends Error {}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -69,4 +77,8 @@ export const api = {
     body: { name: string; address: string | null; status: DealStatus; inputs: Deal },
   ) => request<SavedDeal>(`/deals/${id}`, { method: "PUT", body: json(body) }),
   deleteDeal: (id: number) => request<void>(`/deals/${id}`, { method: "DELETE" }),
+  markets: () => request<MarketSummary[]>("/markets"),
+  market: (id: number) => request<MarketDetail>(`/markets/${id}`),
+  indicators: () => request<Indicator[]>("/markets/indicators"),
+  sources: () => request<Sources>("/markets/sources"),
 };

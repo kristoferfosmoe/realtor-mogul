@@ -297,6 +297,121 @@
         }
       }
     },
+    "/markets": {
+      "get": {
+        "tags": [
+          "markets"
+        ],
+        "summary": "List Markets",
+        "description": "Every geography with rent or home-value data, largest first (country on top).",
+        "operationId": "list_markets_markets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MarketSummary"
+                  },
+                  "type": "array",
+                  "title": "Response List Markets Markets Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/markets/indicators": {
+      "get": {
+        "tags": [
+          "markets"
+        ],
+        "summary": "Indicators",
+        "description": "National series for the ticker tape and macro panel.",
+        "operationId": "indicators_markets_indicators_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Indicator"
+                  },
+                  "type": "array",
+                  "title": "Response Indicators Markets Indicators Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/markets/sources": {
+      "get": {
+        "tags": [
+          "markets"
+        ],
+        "summary": "Sources",
+        "operationId": "sources_markets_sources_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcesOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/markets/{geography_id}": {
+      "get": {
+        "tags": [
+          "markets"
+        ],
+        "summary": "Market Detail",
+        "operationId": "market_detail_markets__geography_id__get",
+        "parameters": [
+          {
+            "name": "geography_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Geography Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -717,6 +832,53 @@
         "title": "Financing",
         "description": "A fixed-rate, fully amortizing acquisition loan sized off the purchase price."
       },
+      "GeographyOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
+          "size_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Rank"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "state",
+          "size_rank"
+        ],
+        "title": "GeographyOut"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -729,6 +891,150 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "Indicator": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "frequency": {
+            "type": "string",
+            "title": "Frequency"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "demo": {
+            "type": "boolean",
+            "title": "Demo"
+          },
+          "stats": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeriesStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "spark": {
+            "items": {
+              "$ref": "#/components/schemas/Point"
+            },
+            "type": "array",
+            "title": "Spark"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "label",
+          "unit",
+          "frequency",
+          "source",
+          "demo",
+          "stats",
+          "spark"
+        ],
+        "title": "Indicator"
+      },
+      "MarketDetail": {
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/MarketSummary"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/SeriesOut"
+            },
+            "type": "array",
+            "title": "Series"
+          }
+        },
+        "type": "object",
+        "required": [
+          "summary",
+          "series"
+        ],
+        "title": "MarketDetail"
+      },
+      "MarketSummary": {
+        "properties": {
+          "geography": {
+            "$ref": "#/components/schemas/GeographyOut"
+          },
+          "rent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeriesStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "home_value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeriesStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gross_yield": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gross Yield"
+          },
+          "rent_spark": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Rent Spark"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "demo": {
+            "type": "boolean",
+            "title": "Demo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "geography",
+          "rent",
+          "home_value",
+          "gross_yield",
+          "rent_spark",
+          "sources",
+          "demo"
+        ],
+        "title": "MarketSummary"
       },
       "Metrics": {
         "properties": {
@@ -893,6 +1199,89 @@
         "title": "Metrics",
         "description": "Headline return metrics. Ratios are None when undefined (e.g. no debt)."
       },
+      "Point": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "value"
+        ],
+        "title": "Point"
+      },
+      "RunOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "series_count": {
+            "type": "integer",
+            "title": "Series Count"
+          },
+          "observation_count": {
+            "type": "integer",
+            "title": "Observation Count"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "status",
+          "started_at",
+          "finished_at",
+          "series_count",
+          "observation_count",
+          "error"
+        ],
+        "title": "RunOut"
+      },
       "SensitivityGrid": {
         "properties": {
           "x_field": {
@@ -996,6 +1385,178 @@
           "y_values"
         ],
         "title": "SensitivityRequest"
+      },
+      "SeriesOut": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "frequency": {
+            "type": "string",
+            "title": "Frequency"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "attribution": {
+            "type": "string",
+            "title": "Attribution"
+          },
+          "stats": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeriesStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/Point"
+            },
+            "type": "array",
+            "title": "Points"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "unit",
+          "frequency",
+          "source",
+          "attribution",
+          "stats",
+          "points"
+        ],
+        "title": "SeriesOut"
+      },
+      "SeriesStats": {
+        "properties": {
+          "latest": {
+            "type": "number",
+            "title": "Latest"
+          },
+          "latest_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Latest Date"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous"
+          },
+          "change": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change"
+          },
+          "change_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Pct"
+          },
+          "yoy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Yoy"
+          },
+          "yoy_abs": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Yoy Abs"
+          },
+          "cagr_3y": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cagr 3Y"
+          },
+          "cagr_5y": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cagr 5Y"
+          }
+        },
+        "type": "object",
+        "required": [
+          "latest",
+          "latest_date"
+        ],
+        "title": "SeriesStats"
+      },
+      "SourcesOut": {
+        "properties": {
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/RunOut"
+            },
+            "type": "array",
+            "title": "Runs"
+          },
+          "attributions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Attributions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "runs",
+          "attributions"
+        ],
+        "title": "SourcesOut"
       },
       "ValidationError": {
         "properties": {

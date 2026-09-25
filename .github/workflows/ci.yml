@@ -34,6 +34,8 @@ jobs:
           MOGUL_DATABASE_URL: postgresql+psycopg://mogul:mogul@localhost:5432/mogul
         run: |
           uv run alembic upgrade head
+          uv run alembic check
+          uv run python -m mogul.ingest demo
           uv run alembic downgrade base
 
   web:

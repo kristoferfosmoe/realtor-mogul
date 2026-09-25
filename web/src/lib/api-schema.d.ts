@@ -92,6 +92,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/markets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Markets
+         * @description Every geography with rent or home-value data, largest first (country on top).
+         */
+        get: operations["list_markets_markets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/markets/indicators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Indicators
+         * @description National series for the ticker tape and macro panel.
+         */
+        get: operations["indicators_markets_indicators_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/markets/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sources */
+        get: operations["sources_markets_sources_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/markets/{geography_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Market Detail */
+        get: operations["market_detail_markets__geography_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -323,10 +397,61 @@ export interface components {
              */
             points_pct: number;
         };
+        /** GeographyOut */
+        GeographyOut: {
+            /** Id */
+            id: number;
+            /** Kind */
+            kind: string;
+            /** Name */
+            name: string;
+            /** State */
+            state: string | null;
+            /** Size Rank */
+            size_rank: number | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** Indicator */
+        Indicator: {
+            /** Metric */
+            metric: string;
+            /** Label */
+            label: string;
+            /** Unit */
+            unit: string;
+            /** Frequency */
+            frequency: string;
+            /** Source */
+            source: string;
+            /** Demo */
+            demo: boolean;
+            stats: components["schemas"]["SeriesStats"] | null;
+            /** Spark */
+            spark: components["schemas"]["Point"][];
+        };
+        /** MarketDetail */
+        MarketDetail: {
+            summary: components["schemas"]["MarketSummary"];
+            /** Series */
+            series: components["schemas"]["SeriesOut"][];
+        };
+        /** MarketSummary */
+        MarketSummary: {
+            geography: components["schemas"]["GeographyOut"];
+            rent: components["schemas"]["SeriesStats"] | null;
+            home_value: components["schemas"]["SeriesStats"] | null;
+            /** Gross Yield */
+            gross_yield: number | null;
+            /** Rent Spark */
+            rent_spark: number[];
+            /** Sources */
+            sources: string[];
+            /** Demo */
+            demo: boolean;
         };
         /**
          * Metrics
@@ -396,6 +521,38 @@ export interface components {
              */
             break_even_occupancy: number | null;
         };
+        /** Point */
+        Point: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Value */
+            value: number;
+        };
+        /** RunOut */
+        RunOut: {
+            /** Id */
+            id: number;
+            /** Source */
+            source: string;
+            /** Status */
+            status: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Finished At */
+            finished_at: string | null;
+            /** Series Count */
+            series_count: number;
+            /** Observation Count */
+            observation_count: number;
+            /** Error */
+            error: string | null;
+        };
         /** SensitivityGrid */
         SensitivityGrid: {
             /** X Field */
@@ -427,6 +584,55 @@ export interface components {
              * @default levered_irr
              */
             metric: string;
+        };
+        /** SeriesOut */
+        SeriesOut: {
+            /** Metric */
+            metric: string;
+            /** Unit */
+            unit: string;
+            /** Frequency */
+            frequency: string;
+            /** Source */
+            source: string;
+            /** Attribution */
+            attribution: string;
+            stats: components["schemas"]["SeriesStats"] | null;
+            /** Points */
+            points: components["schemas"]["Point"][];
+        };
+        /** SeriesStats */
+        SeriesStats: {
+            /** Latest */
+            latest: number;
+            /**
+             * Latest Date
+             * Format: date
+             */
+            latest_date: string;
+            /** Previous */
+            previous?: number | null;
+            /** Change */
+            change?: number | null;
+            /** Change Pct */
+            change_pct?: number | null;
+            /** Yoy */
+            yoy?: number | null;
+            /** Yoy Abs */
+            yoy_abs?: number | null;
+            /** Cagr 3Y */
+            cagr_3y?: number | null;
+            /** Cagr 5Y */
+            cagr_5y?: number | null;
+        };
+        /** SourcesOut */
+        SourcesOut: {
+            /** Runs */
+            runs: components["schemas"]["RunOut"][];
+            /** Attributions */
+            attributions: {
+                [key: string]: string;
+            };
         };
         /** ValidationError */
         ValidationError: {
@@ -706,6 +912,97 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_markets_markets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketSummary"][];
+                };
+            };
+        };
+    };
+    indicators_markets_indicators_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Indicator"][];
+                };
+            };
+        };
+    };
+    sources_markets_sources_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourcesOut"];
+                };
+            };
+        };
+    };
+    market_detail_markets__geography_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                geography_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketDetail"];
+                };
             };
             /** @description Validation Error */
             422: {
