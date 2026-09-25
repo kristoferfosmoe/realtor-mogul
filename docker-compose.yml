@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: mogul
+      POSTGRES_PASSWORD: mogul
+      POSTGRES_DB: mogul
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mogul"]
+      interval: 2s
+      retries: 30
+
+  api:
+    build: ./backend
+    environment:
+      MOGUL_DATABASE_URL: postgresql+psycopg://mogul:mogul@db:5432/mogul
+      MOGUL_CORS_ORIGINS: '["http://localhost:3000"]'
+    depends_on:
+      db:
+        condition: service_healthy
+    ports: ["8000:8000"]
+
+  web:
+    build:
+      context: ./web
+      args:
+        MOGUL_API_URL: http://api:8000
+    depends_on: [api]
+    ports: ["3000:3000"]
+
+volumes:
+  pgdata:

@@ -1,0 +1,1122 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Realtor Mogul API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/analysis/template": {
+      "get": {
+        "tags": [
+          "analysis"
+        ],
+        "summary": "Template",
+        "operationId": "template_analysis_template_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis": {
+      "post": {
+        "tags": [
+          "analysis"
+        ],
+        "summary": "Run Analysis",
+        "operationId": "run_analysis_analysis_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Deal"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Analysis"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/sensitivity": {
+      "post": {
+        "tags": [
+          "analysis"
+        ],
+        "summary": "Run Sensitivity",
+        "operationId": "run_sensitivity_analysis_sensitivity_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SensitivityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SensitivityGrid"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/deals": {
+      "get": {
+        "tags": [
+          "deals"
+        ],
+        "summary": "List Deals",
+        "operationId": "list_deals_deals_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DealOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Deals Deals Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "deals"
+        ],
+        "summary": "Create Deal",
+        "operationId": "create_deal_deals_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DealIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/deals/{deal_id}": {
+      "get": {
+        "tags": [
+          "deals"
+        ],
+        "summary": "Get Deal",
+        "operationId": "get_deal_deals__deal_id__get",
+        "parameters": [
+          {
+            "name": "deal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Deal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "deals"
+        ],
+        "summary": "Update Deal",
+        "operationId": "update_deal_deals__deal_id__put",
+        "parameters": [
+          {
+            "name": "deal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Deal Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DealIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "deals"
+        ],
+        "summary": "Delete Deal",
+        "operationId": "delete_deal_deals__deal_id__delete",
+        "parameters": [
+          {
+            "name": "deal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Deal Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Analysis": {
+        "properties": {
+          "metrics": {
+            "$ref": "#/components/schemas/Metrics"
+          },
+          "years": {
+            "items": {
+              "$ref": "#/components/schemas/YearRow"
+            },
+            "type": "array",
+            "title": "Years"
+          },
+          "exit": {
+            "$ref": "#/components/schemas/Exit"
+          },
+          "levered_cash_flows": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Levered Cash Flows",
+            "description": "Year 0..N, investor perspective"
+          },
+          "unlevered_cash_flows": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Unlevered Cash Flows",
+            "description": "Year 0..N, all-cash perspective"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "metrics",
+          "years",
+          "exit",
+          "levered_cash_flows",
+          "unlevered_cash_flows"
+        ],
+        "title": "Analysis"
+      },
+      "Deal": {
+        "properties": {
+          "purchase_price": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Purchase Price"
+          },
+          "closing_costs_pct": {
+            "type": "number",
+            "maximum": 0.25,
+            "minimum": 0.0,
+            "title": "Closing Costs Pct",
+            "default": 0.03
+          },
+          "rehab_cost": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Rehab Cost",
+            "default": 0.0
+          },
+          "after_repair_value": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After Repair Value",
+            "description": "Value after rehab; defaults to the purchase price"
+          },
+          "monthly_rent": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Monthly Rent",
+            "description": "Gross scheduled rent for all units"
+          },
+          "other_income_monthly": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Other Income Monthly",
+            "default": 0.0
+          },
+          "vacancy_rate": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Vacancy Rate",
+            "default": 0.05
+          },
+          "property_tax_annual": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Property Tax Annual",
+            "default": 0.0
+          },
+          "insurance_annual": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Insurance Annual",
+            "default": 0.0
+          },
+          "hoa_monthly": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Hoa Monthly",
+            "default": 0.0
+          },
+          "utilities_monthly": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Utilities Monthly",
+            "default": 0.0
+          },
+          "other_expenses_annual": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Other Expenses Annual",
+            "default": 0.0
+          },
+          "management_pct": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Management Pct",
+            "default": 0.08
+          },
+          "maintenance_pct": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Maintenance Pct",
+            "default": 0.05
+          },
+          "capex_reserve_pct": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Capex Reserve Pct",
+            "default": 0.05
+          },
+          "rent_growth": {
+            "type": "number",
+            "maximum": 0.5,
+            "minimum": -0.5,
+            "title": "Rent Growth",
+            "default": 0.03
+          },
+          "expense_growth": {
+            "type": "number",
+            "maximum": 0.5,
+            "minimum": -0.5,
+            "title": "Expense Growth",
+            "default": 0.03
+          },
+          "appreciation": {
+            "type": "number",
+            "maximum": 0.5,
+            "minimum": -0.5,
+            "title": "Appreciation",
+            "default": 0.03
+          },
+          "hold_years": {
+            "type": "integer",
+            "maximum": 40.0,
+            "minimum": 1.0,
+            "title": "Hold Years",
+            "default": 10
+          },
+          "selling_costs_pct": {
+            "type": "number",
+            "maximum": 0.25,
+            "minimum": 0.0,
+            "title": "Selling Costs Pct",
+            "default": 0.06
+          },
+          "exit_cap_rate": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 0.5,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exit Cap Rate",
+            "description": "If set, exit value = next-year NOI / exit cap rate"
+          },
+          "financing": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Financing"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "purchase_price",
+          "monthly_rent"
+        ],
+        "title": "Deal",
+        "description": "Everything needed to underwrite one income property over a hold period."
+      },
+      "DealIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "watching",
+              "offer",
+              "owned",
+              "passed"
+            ],
+            "title": "Status",
+            "default": "watching"
+          },
+          "inputs": {
+            "$ref": "#/components/schemas/Deal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "inputs"
+        ],
+        "title": "DealIn"
+      },
+      "DealOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "watching",
+              "offer",
+              "owned",
+              "passed"
+            ],
+            "title": "Status",
+            "default": "watching"
+          },
+          "inputs": {
+            "$ref": "#/components/schemas/Deal"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/Metrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "inputs",
+          "id",
+          "created_at",
+          "updated_at",
+          "metrics"
+        ],
+        "title": "DealOut"
+      },
+      "Exit": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "sale_price": {
+            "type": "number",
+            "title": "Sale Price"
+          },
+          "selling_costs": {
+            "type": "number",
+            "title": "Selling Costs"
+          },
+          "loan_payoff": {
+            "type": "number",
+            "title": "Loan Payoff"
+          },
+          "net_proceeds": {
+            "type": "number",
+            "title": "Net Proceeds",
+            "description": "Cash to the investor after costs and payoff"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "year",
+          "sale_price",
+          "selling_costs",
+          "loan_payoff",
+          "net_proceeds"
+        ],
+        "title": "Exit"
+      },
+      "Financing": {
+        "properties": {
+          "down_payment_pct": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Down Payment Pct",
+            "default": 0.25
+          },
+          "interest_rate": {
+            "type": "number",
+            "maximum": 0.5,
+            "minimum": 0.0,
+            "title": "Interest Rate",
+            "default": 0.07
+          },
+          "amortization_years": {
+            "type": "integer",
+            "maximum": 40.0,
+            "minimum": 1.0,
+            "title": "Amortization Years",
+            "default": 30
+          },
+          "points_pct": {
+            "type": "number",
+            "maximum": 0.1,
+            "minimum": 0.0,
+            "title": "Points Pct",
+            "description": "Loan fees as a share of the loan",
+            "default": 0.0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Financing",
+        "description": "A fixed-rate, fully amortizing acquisition loan sized off the purchase price."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Metrics": {
+        "properties": {
+          "total_capital": {
+            "type": "number",
+            "title": "Total Capital",
+            "description": "Price + closing costs + rehab"
+          },
+          "loan_amount": {
+            "type": "number",
+            "title": "Loan Amount"
+          },
+          "equity_invested": {
+            "type": "number",
+            "title": "Equity Invested",
+            "description": "Cash in: down payment, closing, rehab, points"
+          },
+          "noi_year1": {
+            "type": "number",
+            "title": "Noi Year1"
+          },
+          "cash_flow_year1": {
+            "type": "number",
+            "title": "Cash Flow Year1"
+          },
+          "cap_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Rate",
+            "description": "Year-one NOI / purchase price"
+          },
+          "roic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roic",
+            "description": "Year-one NOI / total capital (yield on cost)"
+          },
+          "cash_on_cash": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash On Cash",
+            "description": "Year-one cash flow / equity invested"
+          },
+          "dscr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dscr",
+            "description": "Year-one NOI / debt service"
+          },
+          "levered_irr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Levered Irr"
+          },
+          "unlevered_irr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlevered Irr"
+          },
+          "equity_multiple": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Equity Multiple",
+            "description": "Total cash returned / equity invested"
+          },
+          "total_profit": {
+            "type": "number",
+            "title": "Total Profit",
+            "description": "Total cash returned minus equity invested"
+          },
+          "gross_rent_multiplier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gross Rent Multiplier"
+          },
+          "rent_to_price": {
+            "type": "number",
+            "title": "Rent To Price",
+            "description": "Monthly rent / purchase price (the '1% rule')"
+          },
+          "break_even_occupancy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Break Even Occupancy",
+            "description": "Occupancy at which income covers expenses and debt service"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "total_capital",
+          "loan_amount",
+          "equity_invested",
+          "noi_year1",
+          "cash_flow_year1",
+          "cap_rate",
+          "roic",
+          "cash_on_cash",
+          "dscr",
+          "levered_irr",
+          "unlevered_irr",
+          "equity_multiple",
+          "total_profit",
+          "gross_rent_multiplier",
+          "rent_to_price",
+          "break_even_occupancy"
+        ],
+        "title": "Metrics",
+        "description": "Headline return metrics. Ratios are None when undefined (e.g. no debt)."
+      },
+      "SensitivityGrid": {
+        "properties": {
+          "x_field": {
+            "type": "string",
+            "title": "X Field"
+          },
+          "x_values": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "X Values"
+          },
+          "y_field": {
+            "type": "string",
+            "title": "Y Field"
+          },
+          "y_values": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Y Values"
+          },
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "values": {
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "x_field",
+          "x_values",
+          "y_field",
+          "y_values",
+          "metric",
+          "values"
+        ],
+        "title": "SensitivityGrid"
+      },
+      "SensitivityRequest": {
+        "properties": {
+          "deal": {
+            "$ref": "#/components/schemas/Deal"
+          },
+          "x_field": {
+            "type": "string",
+            "title": "X Field"
+          },
+          "x_values": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "maxItems": 15,
+            "minItems": 1,
+            "title": "X Values"
+          },
+          "y_field": {
+            "type": "string",
+            "title": "Y Field"
+          },
+          "y_values": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "maxItems": 15,
+            "minItems": 1,
+            "title": "Y Values"
+          },
+          "metric": {
+            "type": "string",
+            "title": "Metric",
+            "default": "levered_irr"
+          }
+        },
+        "type": "object",
+        "required": [
+          "deal",
+          "x_field",
+          "x_values",
+          "y_field",
+          "y_values"
+        ],
+        "title": "SensitivityRequest"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "YearRow": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "gross_potential_rent": {
+            "type": "number",
+            "title": "Gross Potential Rent"
+          },
+          "vacancy_loss": {
+            "type": "number",
+            "title": "Vacancy Loss"
+          },
+          "other_income": {
+            "type": "number",
+            "title": "Other Income"
+          },
+          "effective_gross_income": {
+            "type": "number",
+            "title": "Effective Gross Income"
+          },
+          "fixed_expenses": {
+            "type": "number",
+            "title": "Fixed Expenses"
+          },
+          "variable_expenses": {
+            "type": "number",
+            "title": "Variable Expenses"
+          },
+          "operating_expenses": {
+            "type": "number",
+            "title": "Operating Expenses"
+          },
+          "noi": {
+            "type": "number",
+            "title": "Noi"
+          },
+          "debt_service": {
+            "type": "number",
+            "title": "Debt Service"
+          },
+          "cash_flow": {
+            "type": "number",
+            "title": "Cash Flow"
+          },
+          "loan_balance": {
+            "type": "number",
+            "title": "Loan Balance"
+          },
+          "property_value": {
+            "type": "number",
+            "title": "Property Value"
+          },
+          "equity": {
+            "type": "number",
+            "title": "Equity"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "year",
+          "gross_potential_rent",
+          "vacancy_loss",
+          "other_income",
+          "effective_gross_income",
+          "fixed_expenses",
+          "variable_expenses",
+          "operating_expenses",
+          "noi",
+          "debt_service",
+          "cash_flow",
+          "loan_balance",
+          "property_value",
+          "equity"
+        ],
+        "title": "YearRow",
+        "description": "One year of the pro forma. Balance and value are end-of-year figures."
+      }
+    }
+  }
+}
