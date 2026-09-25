@@ -13,6 +13,8 @@ interface Props {
   optional?: boolean;
   placeholder?: string;
   title?: string;
+  /** Unit shown after an int field; defaults to "yr". */
+  suffix?: string;
 }
 
 const grouped = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
@@ -33,7 +35,7 @@ function parse(text: string, kind: FieldKind): number | null | undefined {
 }
 
 /** Compact numeric input in the style of an order-ticket field. */
-export function NumField({ label, value, onChange, kind, optional, placeholder, title }: Props) {
+export function NumField({ label, value, onChange, kind, optional, placeholder, title, suffix = "yr" }: Props) {
   const id = useId();
   // While editing, the raw text is the source of truth; otherwise the value prop is.
   const [draft, setDraft] = useState<string | null>(null);
@@ -60,7 +62,7 @@ export function NumField({ label, value, onChange, kind, optional, placeholder, 
           }}
         />
         {kind === "pct" && <span className="affix post">%</span>}
-        {kind === "int" && <span className="affix post">yr</span>}
+        {kind === "int" && suffix && <span className="affix post">{suffix}</span>}
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ import type { Deal, DealStatus, Financing } from "@/lib/api";
 import { pct } from "@/lib/format";
 import { growthDefaults, shortName } from "@/lib/markets";
 
-import { NumField } from "./NumField";
+import { NumField } from "@/components/form/NumField";
 
 export interface DealMeta {
   name: string;

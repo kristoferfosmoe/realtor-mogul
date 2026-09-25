@@ -9,9 +9,10 @@ import { api } from "@/lib/api";
 const NAV = [
   { href: "/", label: "ANALYZER" },
   { href: "/markets", label: "MARKETS" },
+  { href: "/portfolio", label: "PORTFOLIO" },
   { href: "/watchlist", label: "WATCHLIST" },
 ];
-const COMING = ["PORTFOLIO", "SCREENER"];
+const COMING = ["SCREENER"];
 
 export function TopBar() {
   const pathname = usePathname();
@@ -43,7 +44,15 @@ export function TopBar() {
       </Link>
       <nav className="nav">
         {NAV.map((n) => (
-          <Link key={n.href} href={n.href} className={pathname === n.href ? "active" : ""}>
+          <Link
+            key={n.href}
+            href={n.href}
+            className={
+              pathname === n.href || (n.href !== "/" && pathname.startsWith(`${n.href}/`))
+                ? "active"
+                : ""
+            }
+          >
             {n.label}
           </Link>
         ))}

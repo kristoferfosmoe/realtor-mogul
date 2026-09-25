@@ -25,6 +25,23 @@ export type Indicator = Schemas["Indicator"];
 export type Sources = Schemas["SourcesOut"];
 export type Point = Schemas["Point"];
 
+export type Portfolio = Schemas["PortfolioOut"];
+export type Holding = Schemas["Holding"];
+export type PropertyDetail = Schemas["PropertyDetail"];
+export type PropertyOut = Schemas["PropertyOut"];
+export type PropertyIn = Schemas["PropertyIn"];
+export type PropertyType = NonNullable<PropertyIn["property_type"]>;
+export type LoanIn = Schemas["LoanIn"];
+export type Performance = Schemas["Performance"];
+export type MonthRow = Schemas["MonthRow"];
+export type LeaseIn = Schemas["LeaseIn"];
+export type Lease = Schemas["LeaseOut"];
+export type Transaction = Schemas["TransactionOut"];
+export type TransactionIn = Schemas["TransactionIn"];
+export type Category = Schemas["CategoryOut"];
+export type ImportResult = Schemas["ImportOut"];
+export type ValuationIn = Schemas["ValuationIn"];
+
 export class ApiError extends Error {}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -81,4 +98,47 @@ export const api = {
   market: (id: number) => request<MarketDetail>(`/markets/${id}`),
   indicators: () => request<Indicator[]>("/markets/indicators"),
   sources: () => request<Sources>("/markets/sources"),
+
+  portfolio: () => request<Portfolio>("/portfolio"),
+  categories: () => request<Category[]>("/portfolio/categories"),
+  property: (id: number) => request<PropertyDetail>(`/portfolio/properties/${id}`),
+  createProperty: (body: PropertyIn) =>
+    request<PropertyDetail>("/portfolio/properties", { method: "POST", body: json(body) }),
+  createFromDeal: (dealId: number, purchaseDate: string) =>
+    request<PropertyDetail>(
+      `/portfolio/properties/from-deal/${dealId}?purchase_date=${encodeURIComponent(purchaseDate)}`,
+      { method: "POST" },
+    ),
+  updateProperty: (id: number, body: PropertyIn) =>
+    request<PropertyDetail>(`/portfolio/properties/${id}`, { method: "PUT", body: json(body) }),
+  deleteProperty: (id: number) =>
+    request<void>(`/portfolio/properties/${id}`, { method: "DELETE" }),
+  addLease: (propertyId: number, body: LeaseIn) =>
+    request<Lease>(`/portfolio/properties/${propertyId}/leases`, { method: "POST", body: json(body) }),
+  updateLease: (id: number, body: LeaseIn) =>
+    request<Lease>(`/portfolio/leases/${id}`, { method: "PUT", body: json(body) }),
+  deleteLease: (id: number) => request<void>(`/portfolio/leases/${id}`, { method: "DELETE" }),
+  transactions: (propertyId: number) =>
+    request<Transaction[]>(`/portfolio/properties/${propertyId}/transactions`),
+  addTransaction: (propertyId: number, body: TransactionIn) =>
+    request<Transaction>(`/portfolio/properties/${propertyId}/transactions`, {
+      method: "POST",
+      body: json(body),
+    }),
+  importTransactions: (propertyId: number, csv: string) =>
+    request<ImportResult>(`/portfolio/properties/${propertyId}/transactions/import`, {
+      method: "POST",
+      body: json({ csv }),
+    }),
+  patchTransaction: (id: number, body: { category?: TransactionIn["category"]; description?: string }) =>
+    request<Transaction>(`/portfolio/transactions/${id}`, { method: "PATCH", body: json(body) }),
+  deleteTransaction: (id: number) =>
+    request<void>(`/portfolio/transactions/${id}`, { method: "DELETE" }),
+  addValuation: (propertyId: number, body: ValuationIn) =>
+    request<unknown>(`/portfolio/properties/${propertyId}/valuations`, {
+      method: "POST",
+      body: json(body),
+    }),
+  deleteValuation: (id: number) =>
+    request<void>(`/portfolio/valuations/${id}`, { method: "DELETE" }),
 };

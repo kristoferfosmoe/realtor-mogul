@@ -2,8 +2,10 @@
 
 A real-estate investment terminal. Underwrite rentals the way a trader watches
 tickers: live IRR, ROIC, cash-on-cash and DSCR as you change assumptions,
-sensitivity heatmaps, a watchlist screener, and a Markets page tracking rent
-and home-value trends by metro. Listings and recommendations are next.
+sensitivity heatmaps, a watchlist screener, a Markets page tracking rent and
+home-value trends by metro, and a Portfolio that tracks what you own: ledger
+(with bank CSV import), rent roll, loan, market-indexed valuations, and actual
+returns against the original projection. Listings and recommendations are next.
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Layout
@@ -15,6 +17,7 @@ backend/   FastAPI app + the pure underwriting engine (Python, uv)
   src/mogul/db/       SQLAlchemy models; migrations live in backend/alembic/
   src/mogul/ingest/   market-data source adapters + pipeline (python -m mogul.ingest)
   src/mogul/markets/  time-series analytics (YoY, CAGR, gross yield) and queries
+  src/mogul/portfolio/ owned properties: ledger categories, CSV import, performance
 web/       Next.js terminal UI (TypeScript), proxies /api/* to the backend
 docs/      architecture and decisions
 ```

@@ -136,21 +136,62 @@ it daily.
 Next sources: HUD Fair Market Rents (API token), Census ACS median rent by ZIP/tract,
 RentCast for comps. Listings and commercial sources are covered below.
 
-### Listings, portfolio, recommendations (later)
+### Portfolio (built)
+Tables (money is exact `NUMERIC(14,2)`; it records real transactions):
+- `property`: purchase (date, price, closing, rehab), optional sale, `market_id` (for
+  valuation indexing) and `deal_id` (the watchlist underwriting, for actual vs. projected).
+- `loan`: one fixed-rate amortizing loan per property. The balance and scheduled payments
+  come from the engine's mortgage math.
+- `lease`: the rent roll. Occupancy and scheduled rent are read from active leases.
+- `ledger_transaction`: signed amounts (+ in, − out) with a category. CSV imports store
+  a hash per line, so re-importing the same statement skips lines already imported.
+- `valuation`: appraisals and estimates.
+
+`mogul.portfolio`:
+- `categories`: income / operating / capital / debt service / transfer / uncategorized,
+  plus keyword rules that guess a category from a bank description.
+- `statement`: CSV parser for bank and property-manager exports (signed Amount or
+  Debit/Credit columns, US or ISO dates, `$1,234` and `(12.00)` style amounts).
+- `performance` (pure, given an as-of date):
+  - **NOI** = income − operating expenses. Capex, debt service and uncategorized lines sit
+    below NOI but count in cash flow; owner transfers are ignored.
+  - **Debt service:** if the ledger has no mortgage payments, scheduled payments are
+    imputed (flagged in the UI).
+  - **T12:** trailing twelve months, annualized when the history is shorter.
+  - **Value:** the latest valuation (the purchase price is the first), carried forward
+    with the market's home-value index, or the national index when the market has none.
+  - **IRR:** XIRR of −equity at purchase, then monthly net cash, then terminal equity.
+    Terminal equity is the actual sale, or a **mark-to-market** sale today at estimated
+    value less 6% selling costs. Not shown until 6 months of history.
+- `service`: loads the database rows into the pure model, compares T12 actuals with the
+  linked deal's projection for the same hold year, and sums monthly rows into the
+  portfolio equity curve.
+
+API under `/portfolio`: portfolio summary; property CRUD plus `from-deal/{id}` (copies
+price, costs and loan from a watchlist deal and marks it owned); leases; transactions
+(add, patch category, delete, CSV import); valuations.
+
+UI:
+- **Portfolio:** net equity quote, KPIs, a value/debt/equity chart with monthly
+  cash-flow bars, a positions table, and allocation by market and type.
+- **Property page:** KPIs with data-quality warnings, chart, actual vs. projected,
+  ledger (add, paste/upload CSV, recategorize inline, filter uncategorized), rent roll,
+  loan and valuations.
+
+### Listings and recommendations (later)
 - **Listings:** for-sale listings plus their status and price history, duplicates merged
   across sources, a rent estimate (market rent by ZIP and bedroom count, adjusted with
   comps, a model later), and an automatic pro forma.
-- **Portfolio:** owned properties, units, leases, loans, an exact-decimal ledger (CSV
-  import), and actual vs. pro forma returns (`xirr` on real dated flows).
 - **Recommendations:** a user-defined buy box filters listings, each gets a pro forma,
-  then a score (returns, market rent trend, risk, portfolio concentration), then a
-  ranking. Every result shows *why*. Alerts fire when a new listing matches.
+  then a score (returns, market rent trend, risk, and concentration measured against
+  the actual portfolio's allocation), then a ranking. Every result shows *why*. Alerts
+  fire when a new listing matches.
 
 ## Roadmap
 
 1. ✅ Foundation: monorepo, CI, Docker Compose, migrations.
 2. ✅ Underwriting engine, deal analyzer, watchlist.
 3. ✅ Market rent ingestion + Markets page (rent-trend charts, growth defaults).
-4. Portfolio tracking (ledger, actual vs. projected).
+4. ✅ Portfolio tracking (ledger, CSV import, rent roll, valuations, actual vs. projected).
 5. Listings ingestion, rent estimation, screener and recommendations, alerts.
 6. Commercial underwriting (rent roll, NNN, TI/LC), Monte Carlo, after-tax returns, auth.

@@ -166,6 +166,221 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/portfolio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Portfolio */
+        get: operations["portfolio_portfolio_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portfolio/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Categories */
+        get: operations["categories_portfolio_categories_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portfolio/properties": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Property */
+        post: operations["create_property_portfolio_properties_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portfolio/properties/from-deal/{deal_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create From Deal
+         * @description Turn a watchlist deal into an owned property, keeping it linked for comparisons.
+         */
+        post: operations["create_from_deal_portfolio_properties_from_deal__deal_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portfolio/properties/{property_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Property */
+        get: operations["get_property_portfolio_properties__property_id__get"];
+        /** Update Property */
+        put: operations["update_property_portfolio_properties__property_id__put"];
+        post?: never;
+        /** Delete Property */
+        delete: operations["delete_property_portfolio_properties__property_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portfolio/properties/{property_id}/leases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Lease */
+        post: operations["add_lease_portfolio_properties__property_id__leases_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portfolio/leases/{lease_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Lease */
+        put: operations["update_lease_portfolio_leases__lease_id__put"];
+        post?: never;
+        /** Delete Lease */
+        delete: operations["delete_lease_portfolio_leases__lease_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portfolio/properties/{property_id}/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Transactions */
+        get: operations["list_transactions_portfolio_properties__property_id__transactions_get"];
+        put?: never;
+        /** Add Transaction */
+        post: operations["add_transaction_portfolio_properties__property_id__transactions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portfolio/properties/{property_id}/transactions/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Transactions
+         * @description Import a bank/property-manager CSV. Lines seen in earlier imports are skipped.
+         */
+        post: operations["import_transactions_portfolio_properties__property_id__transactions_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portfolio/transactions/{transaction_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Transaction */
+        delete: operations["delete_transaction_portfolio_transactions__transaction_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Transaction */
+        patch: operations["update_transaction_portfolio_transactions__transaction_id__patch"];
+        trace?: never;
+    };
+    "/portfolio/properties/{property_id}/valuations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Valuation */
+        post: operations["add_valuation_portfolio_properties__property_id__valuations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portfolio/valuations/{valuation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Valuation */
+        delete: operations["delete_valuation_portfolio_valuations__valuation_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -203,6 +418,15 @@ export interface components {
              * @description Year 0..N, all-cash perspective
              */
             unlevered_cash_flows: number[];
+        };
+        /** CategoryOut */
+        CategoryOut: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Group */
+            group: string;
         };
         /**
          * Deal
@@ -415,6 +639,27 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** Holding */
+        Holding: {
+            property: components["schemas"]["PropertyOut"];
+            performance: components["schemas"]["Performance"];
+        };
+        /** ImportIn */
+        ImportIn: {
+            /** Csv */
+            csv: string;
+        };
+        /** ImportOut */
+        ImportOut: {
+            /** Imported */
+            imported: number;
+            /** Skipped Duplicates */
+            skipped_duplicates: number;
+            /** Guessed */
+            guessed: number;
+            /** Uncategorized */
+            uncategorized: number;
+        };
         /** Indicator */
         Indicator: {
             /** Metric */
@@ -432,6 +677,92 @@ export interface components {
             stats: components["schemas"]["SeriesStats"] | null;
             /** Spark */
             spark: components["schemas"]["Point"][];
+        };
+        /** LeaseIn */
+        LeaseIn: {
+            /**
+             * Unit
+             * @default
+             */
+            unit: string;
+            /** Tenant */
+            tenant?: string | null;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /** End Date */
+            end_date?: string | null;
+            /** Monthly Rent */
+            monthly_rent: number | string;
+            /**
+             * Deposit
+             * @default 0
+             */
+            deposit: number | string;
+        };
+        /** LeaseOut */
+        LeaseOut: {
+            /**
+             * Unit
+             * @default
+             */
+            unit: string;
+            /** Tenant */
+            tenant?: string | null;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /** End Date */
+            end_date?: string | null;
+            /** Monthly Rent */
+            monthly_rent: number;
+            /**
+             * Deposit
+             * @default 0
+             */
+            deposit: number;
+            /** Id */
+            id: number;
+            /** Active */
+            active: boolean;
+        };
+        /** LoanIn */
+        LoanIn: {
+            /** Lender */
+            lender?: string | null;
+            /** Original Amount */
+            original_amount: number | string;
+            /** Interest Rate */
+            interest_rate: number;
+            /** Amortization Years */
+            amortization_years: number;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+        };
+        /** LoanOut */
+        LoanOut: {
+            /** Lender */
+            lender?: string | null;
+            /** Original Amount */
+            original_amount: number;
+            /** Interest Rate */
+            interest_rate: number;
+            /** Amortization Years */
+            amortization_years: number;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /** Monthly Payment */
+            monthly_payment: number;
         };
         /** MarketDetail */
         MarketDetail: {
@@ -521,6 +852,114 @@ export interface components {
              */
             break_even_occupancy: number | null;
         };
+        /** MonthRow */
+        MonthRow: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Income */
+            income: number;
+            /** Operating Expenses */
+            operating_expenses: number;
+            /** Noi */
+            noi: number;
+            /** Capex */
+            capex: number;
+            /** Debt Service */
+            debt_service: number;
+            /** Cash Flow */
+            cash_flow: number;
+            /** Value */
+            value: number;
+            /** Loan Balance */
+            loan_balance: number;
+            /** Equity */
+            equity: number;
+        };
+        /** Performance */
+        Performance: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Sold */
+            sold: boolean;
+            /** Months Held */
+            months_held: number;
+            /** Cost Basis */
+            cost_basis: number;
+            /** Loan Amount */
+            loan_amount: number;
+            /** Equity Invested */
+            equity_invested: number;
+            /** Value */
+            value: number;
+            /** Value Source */
+            value_source: string;
+            /** Loan Balance */
+            loan_balance: number;
+            /** Equity */
+            equity: number;
+            /** Ltv */
+            ltv: number | null;
+            /** Gain */
+            gain: number;
+            /** Gain Pct */
+            gain_pct: number | null;
+            t12: components["schemas"]["PeriodTotals"];
+            /** Noi Annualized */
+            noi_annualized: number | null;
+            /** Cash Flow Annualized */
+            cash_flow_annualized: number | null;
+            /** Cap Rate On Cost */
+            cap_rate_on_cost: number | null;
+            /** Cap Rate On Value */
+            cap_rate_on_value: number | null;
+            /** Cash On Cash */
+            cash_on_cash: number | null;
+            /** Irr */
+            irr: number | null;
+            /** Equity Multiple */
+            equity_multiple: number | null;
+            /** Total Return */
+            total_return: number;
+            /** Distributions */
+            distributions: number;
+            /** Units */
+            units: number;
+            /** Occupied Units */
+            occupied_units: number;
+            /** Occupancy */
+            occupancy: number | null;
+            /** Scheduled Rent */
+            scheduled_rent: number;
+            /** Debt Service Imputed */
+            debt_service_imputed: boolean;
+            /** Uncategorized Count */
+            uncategorized_count: number;
+        };
+        /** PeriodTotals */
+        PeriodTotals: {
+            /** Months */
+            months: number;
+            /** Income */
+            income: number;
+            /** Operating Expenses */
+            operating_expenses: number;
+            /** Noi */
+            noi: number;
+            /** Capex */
+            capex: number;
+            /** Debt Service */
+            debt_service: number;
+            /** Uncategorized */
+            uncategorized: number;
+            /** Cash Flow */
+            cash_flow: number;
+        };
         /** Point */
         Point: {
             /**
@@ -530,6 +969,164 @@ export interface components {
             date: string;
             /** Value */
             value: number;
+        };
+        /** PortfolioMonth */
+        PortfolioMonth: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Value */
+            value: number;
+            /** Loan Balance */
+            loan_balance: number;
+            /** Equity */
+            equity: number;
+            /** Cash Flow */
+            cash_flow: number;
+            /** Noi */
+            noi: number;
+        };
+        /** PortfolioOut */
+        PortfolioOut: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            totals: components["schemas"]["Totals"];
+            /** Holdings */
+            holdings: components["schemas"]["Holding"][];
+            /** Months */
+            months: components["schemas"]["PortfolioMonth"][];
+            /** By Market */
+            by_market: components["schemas"]["Slice"][];
+            /** By Type */
+            by_type: components["schemas"]["Slice"][];
+        };
+        /** ProFormaComparison */
+        ProFormaComparison: {
+            /** Deal Id */
+            deal_id: number;
+            /** Deal Name */
+            deal_name: string;
+            /** Projection Year */
+            projection_year: number;
+            /** Rows */
+            rows: components["schemas"]["VarianceRow"][];
+        };
+        /** PropertyDetail */
+        PropertyDetail: {
+            property: components["schemas"]["PropertyOut"];
+            performance: components["schemas"]["Performance"];
+            /** Monthly */
+            monthly: components["schemas"]["MonthRow"][];
+            /** Leases */
+            leases: components["schemas"]["LeaseOut"][];
+            /** Valuations */
+            valuations: components["schemas"]["ValuationOut"][];
+            pro_forma: components["schemas"]["ProFormaComparison"] | null;
+        };
+        /** PropertyIn */
+        PropertyIn: {
+            /** Name */
+            name: string;
+            /** Address */
+            address?: string | null;
+            /**
+             * Property Type
+             * @default single_family
+             * @enum {string}
+             */
+            property_type: "single_family" | "multi_2_4" | "condo" | "multifamily" | "commercial" | "land";
+            /**
+             * Units
+             * @default 1
+             */
+            units: number;
+            /** Market Id */
+            market_id?: number | null;
+            /** Deal Id */
+            deal_id?: number | null;
+            /**
+             * Purchase Date
+             * Format: date
+             */
+            purchase_date: string;
+            /** Purchase Price */
+            purchase_price: number | string;
+            /**
+             * Closing Costs
+             * @default 0
+             */
+            closing_costs: number | string;
+            /**
+             * Rehab Cost
+             * @default 0
+             */
+            rehab_cost: number | string;
+            /** Sale Date */
+            sale_date?: string | null;
+            /** Sale Price */
+            sale_price?: (number | string) | null;
+            /** Selling Costs */
+            selling_costs?: (number | string) | null;
+            /** Notes */
+            notes?: string | null;
+            loan?: components["schemas"]["LoanIn"] | null;
+        };
+        /** PropertyOut */
+        PropertyOut: {
+            /** Name */
+            name: string;
+            /** Address */
+            address?: string | null;
+            /**
+             * Property Type
+             * @default single_family
+             * @enum {string}
+             */
+            property_type: "single_family" | "multi_2_4" | "condo" | "multifamily" | "commercial" | "land";
+            /**
+             * Units
+             * @default 1
+             */
+            units: number;
+            /** Market Id */
+            market_id?: number | null;
+            /** Deal Id */
+            deal_id?: number | null;
+            /**
+             * Purchase Date
+             * Format: date
+             */
+            purchase_date: string;
+            /** Purchase Price */
+            purchase_price: number;
+            /**
+             * Closing Costs
+             * @default 0
+             */
+            closing_costs: number;
+            /**
+             * Rehab Cost
+             * @default 0
+             */
+            rehab_cost: number;
+            /** Sale Date */
+            sale_date?: string | null;
+            /** Sale Price */
+            sale_price?: number | null;
+            /** Selling Costs */
+            selling_costs?: number | null;
+            /** Notes */
+            notes?: string | null;
+            loan?: components["schemas"]["LoanOut"] | null;
+            /** Id */
+            id: number;
+            /** Market Name */
+            market_name: string | null;
         };
         /** RunOut */
         RunOut: {
@@ -625,6 +1222,15 @@ export interface components {
             /** Cagr 5Y */
             cagr_5y?: number | null;
         };
+        /** Slice */
+        Slice: {
+            /** Label */
+            label: string;
+            /** Value */
+            value: number;
+            /** Share */
+            share: number;
+        };
         /** SourcesOut */
         SourcesOut: {
             /** Runs */
@@ -633,6 +1239,106 @@ export interface components {
             attributions: {
                 [key: string]: string;
             };
+        };
+        /** Totals */
+        Totals: {
+            /** Properties */
+            properties: number;
+            /** Units */
+            units: number;
+            /** Occupied Units */
+            occupied_units: number;
+            /** Occupancy */
+            occupancy: number | null;
+            /** Cost Basis */
+            cost_basis: number;
+            /** Value */
+            value: number;
+            /** Loan Balance */
+            loan_balance: number;
+            /** Equity */
+            equity: number;
+            /** Ltv */
+            ltv: number | null;
+            /** Gain */
+            gain: number;
+            /** Equity Invested */
+            equity_invested: number;
+            /** Noi Annualized */
+            noi_annualized: number;
+            /** Cash Flow Annualized */
+            cash_flow_annualized: number;
+            /** Scheduled Rent */
+            scheduled_rent: number;
+            /** Cap Rate On Value */
+            cap_rate_on_value: number | null;
+            /** Cash On Cash */
+            cash_on_cash: number | null;
+            /** Irr */
+            irr: number | null;
+            /** Total Return */
+            total_return: number;
+            /** Distributions */
+            distributions: number;
+        };
+        /** TransactionIn */
+        TransactionIn: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Amount
+             * @description Signed: positive money in, negative money out
+             */
+            amount: number | string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "rent" | "other_income" | "property_tax" | "insurance" | "hoa" | "utilities" | "maintenance" | "management" | "other_expense" | "capex" | "debt_service" | "transfer" | "uncategorized";
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+        };
+        /** TransactionOut */
+        TransactionOut: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Amount
+             * @description Signed: positive money in, negative money out
+             */
+            amount: number;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "rent" | "other_income" | "property_tax" | "insurance" | "hoa" | "utilities" | "maintenance" | "management" | "other_expense" | "capex" | "debt_service" | "transfer" | "uncategorized";
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /** Id */
+            id: number;
+            /** Group */
+            group: string;
+            /** Imported */
+            imported: boolean;
+        };
+        /** TransactionPatch */
+        TransactionPatch: {
+            /** Category */
+            category?: ("rent" | "other_income" | "property_tax" | "insurance" | "hoa" | "utilities" | "maintenance" | "management" | "other_expense" | "capex" | "debt_service" | "transfer" | "uncategorized") | null;
+            /** Description */
+            description?: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -646,6 +1352,47 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** ValuationIn */
+        ValuationIn: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Value */
+            value: number | string;
+            /** Note */
+            note?: string | null;
+        };
+        /** ValuationOut */
+        ValuationOut: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Value */
+            value: number;
+            /** Note */
+            note?: string | null;
+            /** Id */
+            id: number;
+        };
+        /** VarianceRow */
+        VarianceRow: {
+            /** Label */
+            label: string;
+            /** Projected */
+            projected: number;
+            /** Actual */
+            actual: number | null;
+            /** Variance */
+            variance: number | null;
+            /** Variance Pct */
+            variance_pct: number | null;
+            /** Higher Is Better */
+            higher_is_better: boolean;
         };
         /**
          * YearRow
@@ -1003,6 +1750,535 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MarketDetail"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    portfolio_portfolio_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortfolioOut"];
+                };
+            };
+        };
+    };
+    categories_portfolio_categories_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryOut"][];
+                };
+            };
+        };
+    };
+    create_property_portfolio_properties_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PropertyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PropertyDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_from_deal_portfolio_properties_from_deal__deal_id__post: {
+        parameters: {
+            query: {
+                purchase_date: string;
+            };
+            header?: never;
+            path: {
+                deal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PropertyDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_property_portfolio_properties__property_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                property_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PropertyDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_property_portfolio_properties__property_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                property_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PropertyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PropertyDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_property_portfolio_properties__property_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                property_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_lease_portfolio_properties__property_id__leases_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                property_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeaseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaseOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_lease_portfolio_leases__lease_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lease_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeaseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaseOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_lease_portfolio_leases__lease_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lease_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_transactions_portfolio_properties__property_id__transactions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                property_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_transaction_portfolio_properties__property_id__transactions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                property_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_transactions_portfolio_properties__property_id__transactions_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                property_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_transaction_portfolio_transactions__transaction_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_transaction_portfolio_transactions__transaction_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_valuation_portfolio_properties__property_id__valuations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                property_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValuationIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValuationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_valuation_portfolio_valuations__valuation_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                valuation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

@@ -904,3 +904,103 @@ code {
   font-size: 11px;
   text-align: right;
 }
+
+/* ---------- portfolio ---------- */
+
+.portfolio-grid {
+  grid-template-columns: minmax(0, 1fr) 340px;
+}
+@media (max-width: 1280px) {
+  .portfolio-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.alloc-row + .alloc-row {
+  margin-top: 8px;
+}
+.bar {
+  height: 4px;
+  background: var(--panel-3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.bar > div {
+  height: 100%;
+  background: var(--info);
+}
+.warn-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--accent);
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 6px 24px;
+  padding: 12px;
+}
+.form-grid .field {
+  grid-template-columns: 1fr 150px;
+}
+.field input.text-input,
+.field select.select {
+  width: 100%;
+}
+.row-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.row-form > * {
+  flex: 1 1 110px;
+  min-width: 0;
+}
+.row-form .grow {
+  flex: 3 1 180px;
+}
+.row-form .btn {
+  flex: 0 0 auto;
+}
+input[type="date"].text-input {
+  color-scheme: dark;
+}
+textarea.text-input {
+  height: 120px;
+  padding: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  resize: vertical;
+}
+.table-scroll.tall {
+  max-height: 420px;
+  overflow-y: auto;
+}
+.inline-select {
+  height: 22px;
+  padding: 0 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-size: 11px;
+  font-family: var(--font-sans);
+}
+.inline-select:hover,
+.inline-select:focus {
+  border-color: var(--border-strong);
+  background: var(--bg);
+}
+.inline-select.flagged {
+  color: var(--accent);
+  border-color: rgba(240, 185, 11, 0.4);
+}
+.section-actions {
+  display: flex;
+  gap: 6px;
+}
