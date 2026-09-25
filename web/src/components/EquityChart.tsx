@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  AreaSeries,
   ColorType,
   createChart,
   CrosshairMode,
@@ -30,7 +29,7 @@ export function EquityChart({ title, points }: { title: string; points: EquityPo
   const container = useRef<HTMLDivElement>(null);
   const chart = useRef<IChartApi | null>(null);
   const series = useRef<{
-    value: ISeriesApi<"Area">;
+    value: ISeriesApi<"Line">;
     equity: ISeriesApi<"Line">;
     loan: ISeriesApi<"Line">;
     cash: ISeriesApi<"Histogram">;
@@ -57,13 +56,7 @@ export function EquityChart({ title, points }: { title: string; points: EquityPo
       handleScale: false,
     });
     series.current = {
-      value: c.addSeries(AreaSeries, {
-        lineColor: C.value,
-        topColor: "rgba(76, 141, 255, 0.25)",
-        bottomColor: "rgba(76, 141, 255, 0.02)",
-        lineWidth: 2,
-        title: "Value",
-      }),
+      value: c.addSeries(LineSeries, { color: C.value, lineWidth: 2, title: "Value" }),
       equity: c.addSeries(LineSeries, { color: C.equity, lineWidth: 2, title: "Equity" }),
       loan: c.addSeries(LineSeries, { color: C.loan, lineWidth: 1, lineStyle: 2, title: "Debt" }),
       cash: c.addSeries(HistogramSeries, { title: "Cash flow", priceLineVisible: false }, 1),

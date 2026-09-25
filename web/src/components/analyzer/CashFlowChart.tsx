@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  AreaSeries,
   ColorType,
   createChart,
   CrosshairMode,
@@ -26,7 +25,7 @@ const COLORS = {
 };
 
 interface Series {
-  value: ISeriesApi<"Area">;
+  value: ISeriesApi<"Line">;
   equity: ISeriesApi<"Line">;
   loan: ISeriesApi<"Line">;
   cash: ISeriesApi<"Histogram">;
@@ -71,13 +70,7 @@ export function CashFlowChart({ deal, analysis }: { deal: Deal; analysis: Analys
       handleScale: false,
     });
     series.current = {
-      value: c.addSeries(AreaSeries, {
-        lineColor: COLORS.value,
-        topColor: "rgba(76, 141, 255, 0.28)",
-        bottomColor: "rgba(76, 141, 255, 0.02)",
-        lineWidth: 2,
-        title: "Value",
-      }),
+      value: c.addSeries(LineSeries, { color: COLORS.value, lineWidth: 2, title: "Value" }),
       equity: c.addSeries(LineSeries, { color: COLORS.equity, lineWidth: 2, title: "Equity" }),
       loan: c.addSeries(LineSeries, {
         color: COLORS.loan,
