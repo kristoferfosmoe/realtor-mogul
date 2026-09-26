@@ -84,13 +84,6 @@ export function ScreenerView() {
 
   return (
     <>
-      {s?.demo && (
-        <div className="banner">
-          <b>DEMO LISTINGS</b> — synthetic properties for trying the screener. Import a Redfin CSV
-          export or configure RentCast (<code>make listings</code>) for real ones; demo listings are
-          removed on the first real fetch.
-        </div>
-      )}
       <main className="workspace screener-grid">
         <div className="col">
           <section className="panel">

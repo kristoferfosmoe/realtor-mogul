@@ -10,7 +10,6 @@ from sqlalchemy.pool import StaticPool
 
 from mogul.db.models import Base, Geography, IngestionRun, MarketObservation, MarketSeries
 from mogul.ingest.base import US, GeoRef, ParsedSeries, RawFile
-from mogul.ingest.demo import DemoSource
 from mogul.ingest.fred import FredSource, parse_csv
 from mogul.ingest.pipeline import load_archive, run_source, store
 from mogul.ingest.zillow import ZillowSource
@@ -133,31 +132,6 @@ def test_failed_fetch_is_recorded_and_keeps_existing_data(session: Session, tmp_
     assert _count(session, MarketObservation) == 2
 
 
-def test_real_run_purges_demo_data(session: Session, tmp_path: Path) -> None:
-    run_source(session, DemoSource(end=date(2024, 12, 31)), httpx.Client(), tmp_path)
-    assert session.scalar(select(func.count()).where(MarketSeries.source == "demo"))
-    run_source(session, FakeSource(), httpx.Client(), tmp_path)
-    assert list(session.scalars(select(MarketSeries.source).distinct())) == ["fake"]
-    # Demo-only geographies are removed; the one with real data remains.
-    assert list(session.scalars(select(Geography.name))) == ["Austin, TX"]
-
-
-def test_demo_is_deterministic_and_complete() -> None:
-    a = list(DemoSource(end=date(2024, 12, 31)).parse([]))
-    b = list(DemoSource(end=date(2024, 12, 31)).parse([]))
-    assert a == b
-    metrics = {s.metric for s in a}
-    assert metrics == {
-        "rent_index",
-        "home_value",
-        "mortgage_rate_30y",
-        "cpi_rent",
-        "rental_vacancy",
-    }
-    rent = next(s for s in a if s.source_key == "rent:US")
-    assert rent.observations[-1][0] == date(2024, 12, 31)
-
-
 def test_store_merges_external_ids_across_sources(session: Session) -> None:
     geo_a = GeoRef("msa", "Austin, TX", external_ids={"zillow": 1})
     geo_b = GeoRef("msa", "Austin, TX", "TX", external_ids={"cbsa": "12420"})
@@ -166,3 +140,13 @@ def test_store_merges_external_ids_across_sources(session: Session) -> None:
     geo = session.scalars(select(Geography)).one()
     assert geo.external_ids == {"zillow": 1, "cbsa": "12420"}
     assert geo.state == "TX"
+
+
+def test_store_creates_zip_geographies_and_reuses_them(session: Session) -> None:
+    zip_geo = GeoRef("zip", "38104")
+    series = [ParsedSeries("acs:zcta:38104", "median_gross_rent", "annual", zip_geo, [])]
+    store(session, "census", series)
+    store(session, "census", series)
+    geo = session.scalars(select(Geography)).one()
+    assert (geo.kind, geo.name) == ("zip", "38104")
+    assert _count(session, MarketSeries) == 1

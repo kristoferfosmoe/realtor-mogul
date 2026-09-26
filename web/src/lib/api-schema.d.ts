@@ -571,6 +571,26 @@ export interface paths {
         patch: operations["patch_listing_listings__listing_id__patch"];
         trace?: never;
     };
+    "/listings/{listing_id}/rent-comps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Listing Rent Comps
+         * @description Fetch comparable rentals from RentCast (one API call) and re-screen the listing.
+         */
+        post: operations["listing_rent_comps_listings__listing_id__rent_comps_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/listings/{listing_id}/watchlist": {
         parameters: {
             query?: never;
@@ -741,6 +761,25 @@ export interface components {
              */
             selling_costs_pct: number;
         };
+        /**
+         * Benchmark
+         * @description A published rent level: HUD fair market rent by bedroom, or Census median.
+         */
+        Benchmark: {
+            /** Metric */
+            metric: string;
+            /** Segment */
+            segment: string;
+            /** Source */
+            source: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Value */
+            value: number;
+        };
         /** BulkDeleteIn */
         BulkDeleteIn: {
             /** Ids */
@@ -783,6 +822,46 @@ export interface components {
             target: number;
             /** Passed */
             passed: boolean;
+        };
+        /** Comp */
+        Comp: {
+            /** Address */
+            address: string;
+            /** Rent */
+            rent: number;
+            /** Beds */
+            beds?: number | null;
+            /** Baths */
+            baths?: number | null;
+            /** Sqft */
+            sqft?: number | null;
+            /** Distance Mi */
+            distance_mi?: number | null;
+            /** Days Old */
+            days_old?: number | null;
+            /** Correlation */
+            correlation?: number | null;
+        };
+        /**
+         * CompsEstimate
+         * @description RentCast's rent AVM for one unit, and the comparable rentals behind it.
+         */
+        CompsEstimate: {
+            /** Per Unit */
+            per_unit: number;
+            /** Low */
+            low: number | null;
+            /** High */
+            high: number | null;
+            /** Units */
+            units: number;
+            /** Comps */
+            comps: components["schemas"]["Comp"][];
+            /**
+             * Fetched At
+             * Format: date-time
+             */
+            fetched_at: string;
         };
         /** Criteria */
         Criteria: {
@@ -1090,8 +1169,6 @@ export interface components {
             frequency: string;
             /** Source */
             source: string;
-            /** Demo */
-            demo: boolean;
             stats: components["schemas"]["SeriesStats"] | null;
             /** Spark */
             spark: components["schemas"]["Point"][];
@@ -1232,6 +1309,7 @@ export interface components {
             stated_rent: number | null;
             /** Rent Override */
             rent_override: number | null;
+            rent_comps: components["schemas"]["CompsEstimate"] | null;
             /** Price Change */
             price_change: number | null;
             /**
@@ -1286,6 +1364,8 @@ export interface components {
             summary: components["schemas"]["MarketSummary"];
             /** Series */
             series: components["schemas"]["SeriesOut"][];
+            /** Benchmarks */
+            benchmarks: components["schemas"]["Benchmark"][];
         };
         /** MarketSummary */
         MarketSummary: {
@@ -1298,8 +1378,6 @@ export interface components {
             rent_spark: number[];
             /** Sources */
             sources: string[];
-            /** Demo */
-            demo: boolean;
         };
         /**
          * Metrics
@@ -1678,7 +1756,7 @@ export interface components {
              * Source
              * @enum {string}
              */
-            source: "override" | "stated" | "model";
+            source: "override" | "stated" | "comps" | "model";
             /**
              * Confidence
              * @enum {string}
@@ -1919,8 +1997,6 @@ export interface components {
             new_matches: number;
             /** Interest Rate */
             interest_rate: number;
-            /** Demo */
-            demo: boolean;
         };
         /** Totals */
         Totals: {
@@ -3350,6 +3426,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ListingOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listing_rent_comps_listings__listing_id__rent_comps_post: {
+        parameters: {
+            query: {
+                buy_box_id: number;
+            };
+            header?: never;
+            path: {
+                listing_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListingDetail"];
                 };
             };
             /** @description Validation Error */

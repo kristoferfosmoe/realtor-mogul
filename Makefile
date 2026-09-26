@@ -1,4 +1,4 @@
-.PHONY: setup api web test lint types ingest listings demo-data
+.PHONY: setup api web test lint types ingest listings rents
 
 setup:          ## Install backend and web dependencies, create the local DB
 	cd backend && uv sync && uv run alembic upgrade head
@@ -20,11 +20,11 @@ lint:           ## All static checks
 types:          ## Regenerate web API types from the backend's OpenAPI schema
 	cd web && npm run gen:api
 
-ingest:         ## Download Zillow rent/home-value history and FRED indicators
+ingest:         ## Download Zillow, FRED, Census ACS and (with MOGUL_HUD_API_TOKEN) HUD data
 	cd backend && uv run python -m mogul.ingest run all
 
 listings:       ## Fetch for-sale listings from RentCast (MOGUL_RENTCAST_API_KEY, MOGUL_LISTING_AREAS)
 	cd backend && uv run python -m mogul.ingest listings rentcast
 
-demo-data:      ## Load synthetic market data and listings (offline; replaced by real data)
-	cd backend && uv run python -m mogul.ingest demo && uv run python -m mogul.ingest listings demo
+rents:          ## RentCast rent comps for up to 20 listings that pass a buy box (20 API calls)
+	cd backend && uv run python -m mogul.ingest rents --limit 20

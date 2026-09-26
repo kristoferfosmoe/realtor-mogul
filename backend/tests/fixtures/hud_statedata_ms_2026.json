@@ -1,0 +1,10 @@
+{
+  "data": {
+    "year": "2026",
+    "metroareas": [
+      {"metro_name": "Memphis, TN-MS-AR HUD Metro FMR Area", "code": "METRO32820M32820", "Efficiency": 1011, "One-Bedroom": 1074, "Two-Bedroom": 1229, "Three-Bedroom": 1594, "Four-Bedroom": 1742, "FMR Percentile": 40, "statename": "Mississippi", "statecode": "MS", "smallarea_status": "0"},
+      {"metro_name": "Jackson, MS HUD Metro FMR Area", "code": "METRO27140M27140", "Efficiency": 917, "One-Bedroom": 986, "Two-Bedroom": 1160, "Three-Bedroom": 1482, "Four-Bedroom": 1601, "FMR Percentile": 40, "statename": "Mississippi", "statecode": "MS", "smallarea_status": "0"}
+    ],
+    "counties": []
+  }
+}

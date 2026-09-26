@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { NumField } from "@/components/form/NumField";
-import { api, type ListingDetail } from "@/lib/api";
+import { api, type CompsEstimate, type ListingDetail } from "@/lib/api";
 import { mult, pct, usd } from "@/lib/format";
 import { typeLabel } from "@/lib/portfolio";
 
@@ -33,6 +33,8 @@ export function ListingPanel({
   const [rent, setRent] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
+  const [fetchingComps, setFetchingComps] = useState(false);
+  const [compsError, setCompsError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,6 +61,20 @@ export function ListingPanel({
   };
   const override = (value: number | null) =>
     void api.patchListing(l.id, { rent_override: value }).then(refresh, (e: unknown) => setError(String(e)));
+
+  const fetchComps = async () => {
+    setFetchingComps(true);
+    try {
+      setDetail(await api.listingRentComps(l.id, buyBoxId));
+      setCompsError(null);
+      onChanged();
+    } catch (e) {
+      // Shown under the button, so a missing API key doesn't hide the listing.
+      setCompsError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setFetchingComps(false);
+    }
+  };
 
   const analyze = async () => {
     try {
@@ -141,6 +157,7 @@ export function ListingPanel({
           <span>Rent</span>
           {est && <span className="muted">{est.source} · {est.confidence} confidence</span>}
         </div>
+        {est && <div className="panel-body muted" style={{ paddingBottom: 0 }}>{usd(est.monthly)}/mo from {est.basis}</div>}
         <div className="ticket-fields" style={{ paddingTop: 10 }}>
           <NumField
             label="Your rent estimate / mo"
@@ -162,6 +179,22 @@ export function ListingPanel({
             </button>
           </div>
         </div>
+        <div className="panel-body">
+          <div className="section-actions">
+            <button
+              type="button"
+              className="btn btn-sm"
+              style={{ flex: 1 }}
+              disabled={fetchingComps}
+              onClick={() => void fetchComps()}
+              title="Look up comparable rentals with RentCast's rent AVM (uses one API call)"
+            >
+              {fetchingComps ? "FETCHING…" : l.rent_comps ? "REFRESH RENT COMPS" : "GET RENT COMPS (RENTCAST)"}
+            </button>
+          </div>
+          {compsError && <div className="down" style={{ marginTop: 6 }}>{compsError}</div>}
+          {l.rent_comps && <CompsTable comps={l.rent_comps} />}
+        </div>
       </section>
 
       <section className="panel">
@@ -179,6 +212,48 @@ export function ListingPanel({
         </div>
       </section>
     </>
+  );
+}
+
+function CompsTable({ comps }: { comps: CompsEstimate }) {
+  return (
+    <div style={{ marginTop: 10 }}>
+      <div className="info-row">
+        <span className="muted">
+          RentCast AVM{comps.units > 1 ? ` per unit ×${comps.units}` : ""} · {comps.fetched_at.slice(0, 10)}
+        </span>
+        <span className="num">
+          {usd(comps.per_unit)}
+          {comps.low != null && comps.high != null && (
+            <span className="muted"> ({usd(comps.low)}–{usd(comps.high)})</span>
+          )}
+        </span>
+      </div>
+      <div className="table-scroll">
+        <table className="grid num">
+          <thead>
+            <tr>
+              <th>Comparable</th>
+              <th>Rent</th>
+              <th>Bd/Ba</th>
+              <th>Sq ft</th>
+              <th>Mi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {comps.comps.map((c) => (
+              <tr key={c.address}>
+                <td style={{ fontFamily: "var(--font-sans)", whiteSpace: "normal" }}>{c.address}</td>
+                <td>{usd(c.rent)}</td>
+                <td>{c.beds ?? "?"}/{c.baths ?? "?"}</td>
+                <td>{c.sqft ? c.sqft.toLocaleString() : "—"}</td>
+                <td>{c.distance_mi != null ? c.distance_mi.toFixed(1) : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 

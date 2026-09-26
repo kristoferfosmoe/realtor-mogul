@@ -1,0 +1,11 @@
+{
+  "data": {
+    "year": "2026",
+    "metroareas": [
+      {"metro_name": "Austin, TX HUD Metro FMR Area (outlying part)", "code": "METRO12420M99999", "Efficiency": 900, "One-Bedroom": 950, "Two-Bedroom": 1100, "Three-Bedroom": 1400, "Four-Bedroom": 1600, "FMR Percentile": 40, "statename": "Texas", "statecode": "TX", "smallarea_status": "0"},
+      {"metro_name": "Austin-Round Rock-San Marcos, TX MSA", "code": "METRO12420M12420", "Efficiency": 1480, "One-Bedroom": 1582, "Two-Bedroom": 1824, "Three-Bedroom": 2301, "Four-Bedroom": 2729, "FMR Percentile": 50, "statename": "Texas", "statecode": "TX", "smallarea_status": "1"},
+      {"metro_name": "Fort Worth-Arlington, TX HUD Metro FMR Area", "code": "METRO19100M23104", "Efficiency": 1302, "One-Bedroom": 1386, "Two-Bedroom": 1638, "Three-Bedroom": 2130, "Four-Bedroom": "", "FMR Percentile": 40, "statename": "Texas", "statecode": "TX", "smallarea_status": "1"}
+    ],
+    "counties": []
+  }
+}

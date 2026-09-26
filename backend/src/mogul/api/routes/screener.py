@@ -1,6 +1,9 @@
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
+from pathlib import Path
 from typing import Annotated
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import select
@@ -10,7 +13,9 @@ from mogul.config import get_settings
 from mogul.db.models import BuyBox, IngestionRun, Listing, SavedDeal
 from mogul.db.session import get_session
 from mogul.listings.buybox import Assumptions, Criteria
-from mogul.listings.rent import RentEstimate
+from mogul.listings.comps import RUN_SOURCE as COMPS_RUN_SOURCE
+from mogul.listings.comps import fetch_comps
+from mogul.listings.rent import CompsEstimate, RentEstimate
 from mogul.listings.scoring import Evaluation
 from mogul.listings.service import (
     Summary,
@@ -67,6 +72,7 @@ class ListingOut(BaseModel):
     url: str | None
     stated_rent: float | None
     rent_override: float | None
+    rent_comps: CompsEstimate | None
     price_change: float | None  # vs original list price
     first_seen: datetime
 
@@ -158,6 +164,7 @@ def _listing_out(x: Listing, names: dict[int, str]) -> ListingOut:
         url=x.url,
         stated_rent=x.stated_rent,
         rent_override=x.rent_override,
+        rent_comps=CompsEstimate.model_validate(x.rent_comps) if x.rent_comps else None,
         price_change=price_cut(x),
         first_seen=_utc(x.first_seen),
     )
@@ -259,7 +266,7 @@ def listing_sources(db: DbSession) -> SourceStatus:
     settings = get_settings()
     runs = db.scalars(
         select(IngestionRun)
-        .where(IngestionRun.source.in_(["rentcast", "demo-listings", "csv", "redfin"]))
+        .where(IngestionRun.source.in_(["rentcast", "csv", "redfin", COMPS_RUN_SOURCE]))
         .order_by(IngestionRun.id.desc())
         .limit(10)
     )
@@ -308,9 +315,41 @@ def import_listings(body: ListingImportIn, db: DbSession) -> ListingImportOut:
 
 @router.get("/listings/{listing_id}")
 def listing_detail(listing_id: int, buy_box_id: int, db: DbSession) -> ListingDetail:
+    return _detail(db, _listing(db, listing_id), _box(db, buy_box_id))
+
+
+def rentcast_client() -> Iterator[httpx.Client]:
+    with httpx.Client(timeout=60) as client:
+        yield client
+
+
+@router.post("/listings/{listing_id}/rent-comps")
+def listing_rent_comps(
+    listing_id: int,
+    buy_box_id: int,
+    db: DbSession,
+    client: Annotated[httpx.Client, Depends(rentcast_client)],
+) -> ListingDetail:
+    """Fetch comparable rentals from RentCast (one API call) and re-screen the listing."""
     x = _listing(db, listing_id)
     box = _box(db, buy_box_id)
-    rent, ev, reasons = evaluate_listing(x, box, load_context(db), date.today())
+    settings = get_settings()
+    try:
+        fetch_comps(db, x, client, settings.rentcast_api_key, Path(settings.raw_data_dir))
+    except ValueError as e:
+        raise HTTPException(422, detail=str(e)) from e
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            502, detail=f"RentCast answered {e.response.status_code}: {e.response.text[:200]}"
+        ) from e
+    except httpx.HTTPError as e:
+        raise HTTPException(502, detail=f"could not reach RentCast: {e}") from e
+    db.commit()
+    return _detail(db, x, box)
+
+
+def _detail(db: Session, x: Listing, box: BuyBox) -> ListingDetail:
+    rent, ev, reasons = evaluate_listing(x, box, load_context(db, zips=[x.zip or ""]), date.today())
     return ListingDetail(
         listing=_listing_out(x, market_names(db)),
         events=[ListingEventOut(date=e.date, event=e.event, price=e.price) for e in x.events],
@@ -337,7 +376,8 @@ def patch_listing(listing_id: int, body: ListingPatch, db: DbSession) -> Listing
 def add_to_watchlist(listing_id: int, buy_box_id: int, db: DbSession) -> dict[str, int]:
     """Save the listing, underwritten with the buy box's assumptions, as a watchlist deal."""
     x = _listing(db, listing_id)
-    rent, ev, _ = evaluate_listing(x, _box(db, buy_box_id), load_context(db), date.today())
+    ctx = load_context(db, zips=[x.zip or ""])
+    rent, ev, _ = evaluate_listing(x, _box(db, buy_box_id), ctx, date.today())
     if ev is None:
         raise HTTPException(422, detail="cannot underwrite this listing (no rent estimate)")
     deal = SavedDeal(

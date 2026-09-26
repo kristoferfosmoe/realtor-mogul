@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     # Listings: RentCast API key and the areas to sweep, e.g. ["Memphis, TN"].
     rentcast_api_key: str = ""
     listing_areas: list[str] = []
+    # HUD Fair Market Rents: free token from https://www.huduser.gov/hudapi/public/register.
+    hud_api_token: str = ""
+    hud_fmr_years: int = 5  # fiscal years of history to fetch
+    # Census ACS median gross rent. The key is optional (without one the API allows
+    # a limited number of calls per day): https://api.census.gov/data/key_signup.html
+    census_api_key: str = ""
+    acs_years: int = 3  # 5-year vintages to fetch; ZIP-level data starts with 2020
 
 
 @lru_cache
